@@ -2,15 +2,40 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>VERTBLOX: Domestos Birds</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        body { touch-action: none; }
         .GameContainerBox { border: 1px solid #7795bd; background-color: #f6f9fc; padding: 10px; text-align: center; }
-        .GameHeader { font-size: 18px; font-weight: bold; color: #002277; text-align: left; }
-        .CanvasWrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; }
+        .GameHeader { font-size: 18px; font-weight: bold; color: #002277; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .CanvasWrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; background: #bbdefb; }
         canvas { background-color: #bbdefb; border: 3px solid #002277; display: block; width: 100%; height: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.4); cursor: grab; }
-        canvas:active { cursor: grabbing; }
+        
+        .FullscreenBtn { background: #002277; color: white; border: none; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 3px; }
+        
+        /* Панель бустов */
+        .BoostsPanel {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .BoostBtn {
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            border: 2px solid #000;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #000;
+        }
+        .BoostBtn:active { transform: translateY(2px); box-shadow: none; }
+        #boostSpeed { background-color: #ff1744; }
+        #boostTriple { background-color: #aa00ff; }
+        #boostBomb { background-color: #ffea00; color: #000; }
+
         .ControlsHelp { margin-top: 10px; font-size: 11px; background-color: #fff; padding: 6px; border: 1px dashed #7795bd; display: inline-block; }
         .BackBtn { margin-top: 15px; display: inline-block; background: #e1ebf5 linear-gradient(to bottom, #ffffff, #cedbe8); border: 1px solid #7795bd; color: #002277; padding: 6px 15px; font-weight: bold; text-decoration: none; font-size: 11px; }
     </style>
@@ -28,12 +53,24 @@
     <div id="MainBody">
         <div id="RightColumn" style="width: 100%;">
             <div class="GameContainerBox">
-                <div class="GameHeader">Domestos Birds</div>
-                <div class="CanvasWrapper">
+                <div class="GameHeader">
+                    <span>Domestos Birds</span>
+                    <button class="FullscreenBtn" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
+                </div>
+                
+                <div class="CanvasWrapper" id="gameArea">
                     <canvas id="angryCanvas" width="600" height="350"></canvas>
                 </div>
+
+                <div class="BoostsPanel">
+                    <button class="BoostBtn" id="boostSpeed">⚡ SPEED (x2 Скорость)</button>
+                    <button class="BoostBtn" id="boostTriple">🔮 TRIPLE (Раздвоение)</button>
+                    <button class="BoostBtn" id="boostBomb">💣 BOMB (Взрывной)</button>
+                </div>
+
                 <div class="ControlsHelp">
-                    <strong>Управление:</strong> Зажми левую кнопку мыши на синей бутылке Доместоса в рогатке, <b>потяни назад</b> и отпусти для выстрела! Уничтожь все какашки!
+                    <strong>Управление:</strong> Запусти бутылку Доместоса назад на рогатке и отпусти. <br>
+                    <strong>БУСТЫ:</strong> Нажимай на кнопки бустов <b>после натяжения</b> рогатки перед запуском или прямо во время полета!
                 </div>
                 <br>
                 <a href="games.html" class="BackBtn">← К списку игр</a>
@@ -47,17 +84,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById('angryCanvas');
     const ctx = canvas.getContext('2d');
 
-    const sling = { x: 100, y: 240 }; // Координаты рогатки
-    let bird = { x: 100, y: 240, rx: 100, ry: 240, vx: 0, vy: 0, radius: 12, isFlying: false, isDragging: false };
+    const sling = { x: 100, y: 240 };
     
-    // Блоки защиты какашек
+    // Поддерживаем массив птиц для буста "Тройная атака"
+    let birds = [{ x: 100, y: 240, vx: 0, vy: 0, radius: 12, isFlying: false, isDragging: false, active: true }];
+    
     let blocks = [
         { x: 420, y: 220, w: 20, h: 80, active: true },
         { x: 480, y: 220, w: 20, h: 80, active: true },
         { x: 410, y: 200, w: 100, h: 20, active: true }
     ];
 
-    // Коварные какашки (свинки)
     let targets = [
         { x: 450, y: 270, radius: 14, active: true },
         { x: 450, y: 175, radius: 12, active: true }
@@ -65,11 +102,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let score = 0;
     const gravity = 0.25;
+    
+    // Состояние меню
+    let currentMenu = 'start'; // 'start', 'playing'
+    
+    // Состояния бустов
+    let activeBoost = null; // 'speed', 'triple', 'bomb'
 
-    // Слушатели мыши / тача
-    canvas.addEventListener('mousedown', startDrag);
-    canvas.addEventListener('mousemove', drag);
-    canvas.addEventListener('mouseup', release);
+    canvas.addEventListener('mousedown', handleStart);
+    canvas.addEventListener('mousemove', handleDrag);
+    canvas.addEventListener('mouseup', handleRelease);
+
+    canvas.addEventListener('touchstart', (e) => { handleStart(e.touches[0]); }, { passive: true });
+    canvas.addEventListener('touchmove', (e) => { handleDrag(e.touches[0]); }, { passive: true });
+    canvas.addEventListener('touchend', handleRelease, { passive: true });
 
     function getMousePos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -79,95 +125,162 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    function startDrag(e) {
-        if (bird.isFlying) return;
-        const pos = getMousePos(e);
-        const dist = Math.sqrt((pos.x - bird.x)**2 + (pos.y - bird.y)**2);
-        if (dist < 30) {
-            bird.isDragging = true;
-        }
-    }
-
-    function drag(e) {
-        if (!bird.isDragging) return;
+    function handleStart(e) {
         const pos = getMousePos(e);
         
-        // Ограничение длины натяжения рогатки
+        if (currentMenu === 'start') {
+            // Клик для старта игры
+            if (pos.x > 220 && pos.x < 380 && pos.y > 150 && pos.y < 210) {
+                currentMenu = 'playing';
+            }
+            return;
+        }
+
+        let mainBird = birds[0];
+        if (mainBird.isFlying) return;
+        const dist = Math.sqrt((pos.x - mainBird.x)**2 + (pos.y - mainBird.y)**2);
+        if (dist < 35) {
+            mainBird.isDragging = true;
+        }
+    }
+
+    function handleDrag(e) {
+        if (currentMenu !== 'playing') return;
+        let mainBird = birds[0];
+        if (!mainBird.isDragging) return;
+        
+        const pos = getMousePos(e);
         const dist = Math.sqrt((pos.x - sling.x)**2 + (pos.y - sling.y)**2);
-        if (dist < 60) {
-            bird.x = pos.x;
-            bird.y = pos.y;
+        
+        if (dist < 65) {
+            mainBird.x = pos.x;
+            mainBird.y = pos.y;
         } else {
             const angle = Math.atan2(pos.y - sling.y, pos.x - sling.x);
-            bird.x = sling.x + Math.cos(angle) * 60;
-            bird.y = sling.y + Math.sin(angle) * 60;
+            mainBird.x = sling.x + Math.cos(angle) * 65;
+            mainBird.y = sling.y + Math.sin(angle) * 65;
         }
     }
 
-    function release() {
-        if (!bird.isDragging) return;
-        bird.isDragging = false;
-        bird.isFlying = true;
+    function handleRelease() {
+        let mainBird = birds[0];
+        if (!mainBird || !mainBird.isDragging) return;
+        mainBird.isDragging = false;
+        mainBird.isFlying = true;
 
-        // Расчет вектора силы выстрела
-        bird.vx = (sling.x - bird.x) * 0.16;
-        bird.vy = (sling.y - bird.y) * 0.16;
+        mainBird.vx = (sling.x - mainBird.x) * 0.16;
+        mainBird.vy = (sling.y - mainBird.y) * 0.16;
+
+        // Применяем буст скорости перед вылетом
+        if (activeBoost === 'speed') {
+            mainBird.vx *= 1.8;
+            mainBird.vy *= 1.8;
+            activeBoost = null;
+        }
     }
 
-    function resetBird() {
-        bird.x = sling.x;
-        bird.y = sling.y;
-        bird.vx = 0;
-        bird.vy = 0;
-        bird.isFlying = false;
+    // Обработчики кнопок бустов
+    document.getElementById('boostSpeed').addEventListener('click', () => { activeBoost = 'speed'; });
+    document.getElementById('boostTriple').addEventListener('click', () => {
+        let mainBird = birds[0];
+        if (mainBird && mainBird.isFlying && birds.length === 1) {
+            // Раздвоение на три прямо в полете!
+            birds.push({
+                x: mainBird.x, y: mainBird.y,
+                vx: mainBird.vx, vy: mainBird.vy - 1.5,
+                radius: 12, isFlying: true, active: true
+            });
+            birds.push({
+                x: mainBird.x, y: mainBird.y,
+                vx: mainBird.vx, vy: mainBird.vy + 1.5,
+                radius: 12, isFlying: true, active: true
+            });
+        } else {
+            activeBoost = 'triple';
+        }
+    });
+    document.getElementById('boostBomb').addEventListener('click', () => { activeBoost = 'bomb'; });
+
+    function resetRound() {
+        birds = [{ x: sling.x, y: sling.y, vx: 0, vy: 0, radius: 12, isFlying: false, isDragging: false, active: true }];
+        activeBoost = null;
     }
 
-    function checkCollisions() {
-        if (!bird.isFlying) return;
-
-        // Физика столкновения с блоками
+    function triggerExplosion(x, y) {
+        // Ломает все в радиусе 80px
         for (let b of blocks) {
-            if (!b.active) continue;
-            if (bird.x + bird.radius > b.x && bird.x - bird.radius < b.x + b.w &&
-                bird.y + bird.radius > b.y && bird.y - bird.radius < b.y + b.h) {
-                b.active = false; // Ломаем блок при ударе
-                score += 50;
-            }
+            if (Math.sqrt((b.x - x)**2 + (b.y - y)**2) < 80) b.active = false;
         }
-
-        // Столкновение с какашками
         for (let t of targets) {
-            if (!t.active) continue;
-            const dist = Math.sqrt((bird.x - t.x)**2 + (bird.y - t.y)**2);
-            if (dist < bird.radius + t.radius) {
-                t.active = false; // Уничтожаем цель!
-                score += 100;
-            }
+            if (Math.sqrt((t.x - x)**2 + (t.y - y)**2) < 80) t.active = false;
         }
+        score += 200;
     }
 
     function update() {
-        if (bird.isFlying) {
-            bird.x += bird.vx;
-            bird.y += bird.vy;
-            bird.vy += gravity; // Гравитация тянет вниз
+        if (currentMenu !== 'playing') return;
 
-            checkCollisions();
+        let allInactive = true;
 
-            // Если упал на землю или улетел за экран - респавн птицы
-            if (bird.y > 300 || bird.x > 600) {
-                resetBird();
+        for (let bird of birds) {
+            if (!bird.active) continue;
+
+            if (bird.isFlying) {
+                bird.x += bird.vx;
+                bird.y += bird.vy;
+                bird.vy += gravity;
+
+                // Столкновение с блоками
+                for (let b of blocks) {
+                    if (!b.active) continue;
+                    if (bird.x + bird.radius > b.x && bird.x - bird.radius < b.x + b.w &&
+                        bird.y + bird.radius > b.y && bird.y - bird.radius < b.y + b.h) {
+                        
+                        b.active = false;
+                        score += 50;
+                        if (activeBoost === 'bomb') {
+                            triggerExplosion(bird.x, bird.y);
+                            activeBoost = null;
+                        }
+                    }
+                }
+
+                // Столкновение с какашками
+                for (let t of targets) {
+                    if (!t.active) continue;
+                    const dist = Math.sqrt((bird.x - t.x)**2 + (bird.y - t.y)**2);
+                    if (dist < bird.radius + t.radius) {
+                        t.active = false;
+                        score += 100;
+                        if (activeBoost === 'bomb') {
+                            triggerExplosion(bird.x, bird.y);
+                            activeBoost = null;
+                        }
+                    }
+                }
+
+                // Улетел за границы
+                if (bird.y > 320 || bird.x > 610 || bird.x < -10) {
+                    bird.active = false;
+                } else {
+                    allInactive = false;
+                }
+            } else {
+                allInactive = false;
             }
         }
 
-        // Проверка победы (все цели сбиты)
+        if (allInactive) {
+            resetRound();
+        }
+
+        // Победа
         const won = targets.every(t => !t.active);
         if (won) {
-            // Воскрешаем заново через 2 секунды
             setTimeout(() => {
                 targets.forEach(t => t.active = true);
                 blocks.forEach(b => b.active = true);
-                resetBird();
+                resetRound();
             }, 2000);
         }
     }
@@ -175,12 +288,34 @@ document.addEventListener("DOMContentLoaded", () => {
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Горы на фоне
+        if (currentMenu === 'start') {
+            // Отрисовка Мини-меню
+            ctx.fillStyle = '#0d47a1';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 32px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('DOMESTOS BIRDS', canvas.width / 2, 100);
+            
+            // Кнопка Старт
+            ctx.fillStyle = '#4caf50';
+            ctx.fillRect(220, 150, 160, 60);
+            ctx.strokeStyle = '#fff';
+            ctx.strokeRect(220, 150, 160, 60);
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 20px Arial';
+            ctx.fillText('START GAME', canvas.width / 2, 186);
+            ctx.textAlign = 'left';
+            return;
+        }
+
+        // Задний фон гор
         ctx.fillStyle = '#90caf9';
         ctx.beginPath();
         ctx.moveTo(0, 300); ctx.lineTo(150, 150); ctx.lineTo(300, 300); ctx.fill();
 
-        // Земля и травка
         ctx.fillStyle = '#4caf50';
         ctx.fillRect(0, 300, 600, 50);
 
@@ -194,37 +329,39 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.lineTo(sling.x + 15, sling.y + 60);
         ctx.stroke();
 
-        // Тянущаяся резинка рогатки
-        if (bird.isDragging) {
+        // Натяжение рогатки
+        let mainBird = birds[0];
+        if (mainBird && mainBird.isDragging) {
             ctx.strokeStyle = '#e65100';
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(sling.x - 10, sling.y + 10);
-            ctx.lineTo(bird.x, bird.y);
+            ctx.lineTo(mainBird.x, mainBird.y);
             ctx.lineTo(sling.x + 10, sling.y + 10);
             ctx.stroke();
         }
 
-        // Доместос (наша птичка) - оформлен в виде фирменной синей бутылки с красной крышкой
-        ctx.save();
-        ctx.translate(bird.x, bird.y);
-        
-        // Синий флакон
-        ctx.fillStyle = '#0d47a1';
-        ctx.fillRect(-10, -8, 20, 22);
-        // Белая этикетка
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(-8, -2, 16, 12);
-        ctx.fillStyle = '#d50000';
-        ctx.font = 'bold 5px Arial';
-        ctx.fillText('DOM', -7, 6);
-        // Красный носик (изогнутая крышка)
-        ctx.fillStyle = '#d50000';
-        ctx.fillRect(-5, -14, 10, 6);
+        // Отрисовка летящих Доместосов
+        for (let bird of birds) {
+            if (!bird.active) continue;
+            ctx.save();
+            ctx.translate(bird.x, bird.y);
+            
+            // Флакон Доместоса
+            ctx.fillStyle = '#0d47a1';
+            ctx.fillRect(-10, -8, 20, 22);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(-8, -2, 16, 12);
+            ctx.fillStyle = '#d50000';
+            ctx.font = 'bold 5px Arial';
+            ctx.fillText('DOM', -7, 6);
+            ctx.fillStyle = '#d50000';
+            ctx.fillRect(-5, -14, 10, 6);
 
-        ctx.restore();
+            ctx.restore();
+        }
 
-        // Защитные блоки (дерево/камень)
+        // Блоки
         for (let b of blocks) {
             if (!b.active) continue;
             ctx.fillStyle = '#b0bec5';
@@ -234,20 +371,18 @@ document.addEventListener("DOMContentLoaded", () => {
             ctx.strokeRect(b.x, b.y, b.w, b.h);
         }
 
-        // Какашки (цели) - коричневый завиток с глазками
+        // Какашки (цели)
         for (let t of targets) {
             if (!t.active) continue;
             ctx.save();
             ctx.translate(t.x, t.y);
 
-            // Коричневая основа какашки
             ctx.fillStyle = '#8d6e63';
             ctx.beginPath();
             ctx.arc(0, 4, t.radius, 0, Math.PI * 2);
             ctx.arc(0, -4, t.radius - 3, 0, Math.PI * 2);
             ctx.fill();
 
-            // Глазки
             ctx.fillStyle = '#fff';
             ctx.beginPath();
             ctx.arc(-4, -1, 3, 0, Math.PI*2);
@@ -259,13 +394,6 @@ document.addEventListener("DOMContentLoaded", () => {
             ctx.arc(4, -1, 1, 0, Math.PI*2);
             ctx.fill();
 
-            // Рот (испуганный)
-            ctx.strokeStyle = '#3e2723';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(0, 6, 3, 0, Math.PI, true);
-            ctx.stroke();
-
             ctx.restore();
         }
 
@@ -273,8 +401,11 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.fillStyle = '#000';
         ctx.font = 'bold 14px Arial';
         ctx.fillText('Score: ' + score, 15, 25);
+        if (activeBoost) {
+            ctx.fillStyle = '#ff1744';
+            ctx.fillText('BOOST CHARGED: ' + activeBoost.toUpperCase(), 15, 45);
+        }
 
-        // Проверка на победу (если все убиты)
         if (targets.every(t => !t.active)) {
             ctx.fillStyle = '#2e7d32';
             ctx.font = 'bold 24px Arial';
@@ -289,6 +420,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     loop();
 });
+
+function toggleFullscreen() {
+    const gameArea = document.getElementById('gameArea');
+    if (!document.fullscreenElement) {
+        gameArea.requestFullscreen().catch(err => {
+            alert(`Ошибка входа в полноэкранный режим: ${err.message}`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
 </script>
 </body>
 </html>
