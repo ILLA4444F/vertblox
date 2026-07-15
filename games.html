@@ -43,14 +43,17 @@
         .PlaySmallBtn {
             background: #ff9900 linear-gradient(to bottom, #ffb84d, #e68a00);
             border: 1px solid #cc7a00;
-            color: white;
-            padding: 3px 15px;
+            color: white !important;
+            padding: 5px 20px;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 12px;
             cursor: pointer;
             border-radius: 3px;
             text-decoration: none;
             display: inline-block;
+        }
+        .PlaySmallBtn:hover {
+            background: #e68a00;
         }
     </style>
 </head>
@@ -91,31 +94,28 @@
             
             <div class="GamesGrid">
                 
-                <!-- Плейс 1 -->
                 <div class="GameCard">
                     <div class="GameThumbnail">CROSSROADS</div>
-                    <a href="#" class="GameTitle">Classic Crossroads</a>
+                    <a href="play.html?place=Classic%20Crossroads" class="GameTitle">Classic Crossroads</a>
                     <div class="GameCreator">by VERTBLOX</div>
                     <div style="font-size: 10px; color: #006600; margin-bottom: 8px;">Active: 128 players</div>
-                    <a href="#" class="PlaySmallBtn" onclick="alert('Launching Place: Crossroads...');">PLAY</a>
+                    <a href="play.html?place=Classic%20Crossroads" class="PlaySmallBtn">PLAY</a>
                 </div>
 
-                <!-- Плейс 2 -->
                 <div class="GameCard">
                     <div class="GameThumbnail" style="background-color: #dfd0f4;">CHAOS CANYON</div>
-                    <a href="#" class="GameTitle">Chaos Canyon</a>
+                    <a href="play.html?place=Chaos%20Canyon" class="GameTitle">Chaos Canyon</a>
                     <div class="GameCreator">by VERTBLOX</div>
                     <div style="font-size: 10px; color: #006600; margin-bottom: 8px;">Active: 64 players</div>
-                    <a href="#" class="PlaySmallBtn" onclick="alert('Launching Place: Chaos Canyon...');">PLAY</a>
+                    <a href="play.html?place=Chaos%20Canyon" class="PlaySmallBtn">PLAY</a>
                 </div>
 
-                <!-- Плейс 3 -->
                 <div class="GameCard">
                     <div class="GameThumbnail" style="background-color: #f4d0d0;">BASEPLATE</div>
-                    <a href="#" class="GameTitle">Empty Baseplate</a>
+                    <a href="play.html?place=Empty%20Baseplate" class="GameTitle">Empty Baseplate</a>
                     <div class="GameCreator">by 4444_F</div>
                     <div style="font-size: 10px; color: #666; margin-bottom: 8px;">Active: 0 players</div>
-                    <a href="#" class="PlaySmallBtn" onclick="alert('Launching Place: Baseplate...');">PLAY</a>
+                    <a href="play.html?place=Empty%20Baseplate" class="PlaySmallBtn">PLAY</a>
                 </div>
 
             </div>
