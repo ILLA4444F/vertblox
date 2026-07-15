@@ -14,23 +14,8 @@
         
         .FullscreenBtn { background: #002277; color: white; border: none; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 3px; }
         
-        /* Панель бустов */
-        .BoostsPanel {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .BoostBtn {
-            padding: 8px 12px;
-            font-size: 11px;
-            font-weight: bold;
-            color: white;
-            border: 2px solid #000;
-            border-radius: 5px;
-            cursor: pointer;
-            box-shadow: 0 3px 0 #000;
-        }
+        .BoostsPanel { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .BoostBtn { padding: 8px 12px; font-size: 11px; font-weight: bold; color: white; border: 2px solid #000; border-radius: 5px; cursor: pointer; box-shadow: 0 3px 0 #000; }
         .BoostBtn:active { transform: translateY(2px); box-shadow: none; }
         #boostSpeed { background-color: #ff1744; }
         #boostTriple { background-color: #aa00ff; }
@@ -46,35 +31,28 @@
         <a href="index.html" class="LogoContainer"><span class="LogoText">VERTBLOX</span></a>
         <div class="AuthStatus">Logged in as: <a href="avatar.html">4444_F</a></div>
     </div>
-    <div id="NavigationBar">
-        <a href="index.html">Home</a>
-        <a href="games.html" class="active">Games</a>
-    </div>
     <div id="MainBody">
-        <div id="RightColumn" style="width: 100%;">
-            <div class="GameContainerBox">
-                <div class="GameHeader">
-                    <span>Domestos Birds</span>
-                    <button class="FullscreenBtn" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
-                </div>
-                
-                <div class="CanvasWrapper" id="gameArea">
-                    <canvas id="angryCanvas" width="600" height="350"></canvas>
-                </div>
-
-                <div class="BoostsPanel">
-                    <button class="BoostBtn" id="boostSpeed">⚡ SPEED (x2 Скорость)</button>
-                    <button class="BoostBtn" id="boostTriple">🔮 TRIPLE (Раздвоение)</button>
-                    <button class="BoostBtn" id="boostBomb">💣 BOMB (Взрывной)</button>
-                </div>
-
-                <div class="ControlsHelp">
-                    <strong>Управление:</strong> Запусти бутылку Доместоса назад на рогатке и отпусти. <br>
-                    <strong>БУСТЫ:</strong> Нажимай на кнопки бустов <b>после натяжения</b> рогатки перед запуском или прямо во время полета!
-                </div>
-                <br>
-                <a href="games.html" class="BackBtn">← К списку игр</a>
+        <div class="GameContainerBox">
+            <div class="GameHeader">
+                <span>Domestos Birds (4 Попытки)</span>
+                <button class="FullscreenBtn" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
             </div>
+            
+            <div class="CanvasWrapper" id="gameArea">
+                <canvas id="angryCanvas" width="600" height="350"></canvas>
+            </div>
+
+            <div class="BoostsPanel">
+                <button class="BoostBtn" id="boostSpeed">⚡ SPEED (x2 Скорость)</button>
+                <button class="BoostBtn" id="boostTriple">🔮 TRIPLE (Раздвоение)</button>
+                <button class="BoostBtn" id="boostBomb">💣 BOMB (Взрывной)</button>
+            </div>
+
+            <div class="ControlsHelp">
+                <strong>У вас ровно 4 птицы (попытки).</strong> Используй бусты, чтобы снести все цели до того, как патроны закончатся!
+            </div>
+            <br>
+            <a href="games.html" class="BackBtn">← К списку игр</a>
         </div>
     </div>
 </div>
@@ -86,9 +64,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const sling = { x: 100, y: 240 };
     
-    // Поддерживаем массив птиц для буста "Тройная атака"
     let birds = [{ x: 100, y: 240, vx: 0, vy: 0, radius: 12, isFlying: false, isDragging: false, active: true }];
-    
+    let livesLeft = 4; // 4 Птицы на раунд!
+
     let blocks = [
         { x: 420, y: 220, w: 20, h: 80, active: true },
         { x: 480, y: 220, w: 20, h: 80, active: true },
@@ -102,12 +80,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let score = 0;
     const gravity = 0.25;
-    
-    // Состояние меню
-    let currentMenu = 'start'; // 'start', 'playing'
-    
-    // Состояния бустов
-    let activeBoost = null; // 'speed', 'triple', 'bomb'
+    let currentMenu = 'start';
+    let activeBoost = null;
 
     canvas.addEventListener('mousedown', handleStart);
     canvas.addEventListener('mousemove', handleDrag);
@@ -127,9 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function handleStart(e) {
         const pos = getMousePos(e);
-        
         if (currentMenu === 'start') {
-            // Клик для старта игры
             if (pos.x > 220 && pos.x < 380 && pos.y > 150 && pos.y < 210) {
                 currentMenu = 'playing';
             }
@@ -137,17 +109,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         let mainBird = birds[0];
-        if (mainBird.isFlying) return;
-        const dist = Math.sqrt((pos.x - mainBird.x)**2 + (pos.y - mainBird.y)**2);
-        if (dist < 35) {
-            mainBird.isDragging = true;
+        if (mainBird && !mainBird.isFlying && livesLeft > 0) {
+            const dist = Math.sqrt((pos.x - mainBird.x)**2 + (pos.y - mainBird.y)**2);
+            if (dist < 35) mainBird.isDragging = true;
         }
     }
 
     function handleDrag(e) {
         if (currentMenu !== 'playing') return;
         let mainBird = birds[0];
-        if (!mainBird.isDragging) return;
+        if (!mainBird || !mainBird.isDragging) return;
         
         const pos = getMousePos(e);
         const dist = Math.sqrt((pos.x - sling.x)**2 + (pos.y - sling.y)**2);
@@ -171,30 +142,21 @@ document.addEventListener("DOMContentLoaded", () => {
         mainBird.vx = (sling.x - mainBird.x) * 0.16;
         mainBird.vy = (sling.y - mainBird.y) * 0.16;
 
-        // Применяем буст скорости перед вылетом
         if (activeBoost === 'speed') {
             mainBird.vx *= 1.8;
             mainBird.vy *= 1.8;
             activeBoost = null;
         }
+        
+        livesLeft--; // Тратим одну птицу!
     }
 
-    // Обработчики кнопок бустов
     document.getElementById('boostSpeed').addEventListener('click', () => { activeBoost = 'speed'; });
     document.getElementById('boostTriple').addEventListener('click', () => {
         let mainBird = birds[0];
         if (mainBird && mainBird.isFlying && birds.length === 1) {
-            // Раздвоение на три прямо в полете!
-            birds.push({
-                x: mainBird.x, y: mainBird.y,
-                vx: mainBird.vx, vy: mainBird.vy - 1.5,
-                radius: 12, isFlying: true, active: true
-            });
-            birds.push({
-                x: mainBird.x, y: mainBird.y,
-                vx: mainBird.vx, vy: mainBird.vy + 1.5,
-                radius: 12, isFlying: true, active: true
-            });
+            birds.push({ x: mainBird.x, y: mainBird.y, vx: mainBird.vx, vy: mainBird.vy - 1.5, radius: 12, isFlying: true, active: true });
+            birds.push({ x: mainBird.x, y: mainBird.y, vx: mainBird.vx, vy: mainBird.vy + 1.5, radius: 12, isFlying: true, active: true });
         } else {
             activeBoost = 'triple';
         }
@@ -206,14 +168,17 @@ document.addEventListener("DOMContentLoaded", () => {
         activeBoost = null;
     }
 
+    function resetFullGame() {
+        livesLeft = 4;
+        score = 0;
+        blocks.forEach(b => b.active = true);
+        targets.forEach(t => t.active = true);
+        resetRound();
+    }
+
     function triggerExplosion(x, y) {
-        // Ломает все в радиусе 80px
-        for (let b of blocks) {
-            if (Math.sqrt((b.x - x)**2 + (b.y - y)**2) < 80) b.active = false;
-        }
-        for (let t of targets) {
-            if (Math.sqrt((t.x - x)**2 + (t.y - y)**2) < 80) t.active = false;
-        }
+        for (let b of blocks) { if (Math.sqrt((b.x - x)**2 + (b.y - y)**2) < 80) b.active = false; }
+        for (let t of targets) { if (Math.sqrt((t.x - x)**2 + (t.y - y)**2) < 80) t.active = false; }
         score += 200;
     }
 
@@ -230,36 +195,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 bird.y += bird.vy;
                 bird.vy += gravity;
 
-                // Столкновение с блоками
                 for (let b of blocks) {
                     if (!b.active) continue;
                     if (bird.x + bird.radius > b.x && bird.x - bird.radius < b.x + b.w &&
                         bird.y + bird.radius > b.y && bird.y - bird.radius < b.y + b.h) {
-                        
                         b.active = false;
                         score += 50;
-                        if (activeBoost === 'bomb') {
-                            triggerExplosion(bird.x, bird.y);
-                            activeBoost = null;
-                        }
+                        if (activeBoost === 'bomb') { triggerExplosion(bird.x, bird.y); activeBoost = null; }
                     }
                 }
 
-                // Столкновение с какашками
                 for (let t of targets) {
                     if (!t.active) continue;
                     const dist = Math.sqrt((bird.x - t.x)**2 + (bird.y - t.y)**2);
                     if (dist < bird.radius + t.radius) {
                         t.active = false;
                         score += 100;
-                        if (activeBoost === 'bomb') {
-                            triggerExplosion(bird.x, bird.y);
-                            activeBoost = null;
-                        }
+                        if (activeBoost === 'bomb') { triggerExplosion(bird.x, bird.y); activeBoost = null; }
                     }
                 }
 
-                // Улетел за границы
                 if (bird.y > 320 || bird.x > 610 || bird.x < -10) {
                     bird.active = false;
                 } else {
@@ -270,18 +225,17 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
+        // Если снаряды улетели
         if (allInactive) {
-            resetRound();
-        }
-
-        // Победа
-        const won = targets.every(t => !t.active);
-        if (won) {
-            setTimeout(() => {
-                targets.forEach(t => t.active = true);
-                blocks.forEach(b => b.active = true);
+            if (targets.every(t => !t.active)) {
+                // Выиграли!
+                setTimeout(resetFullGame, 2000);
+            } else if (livesLeft <= 0) {
+                // Проиграли по патронам
+                setTimeout(resetFullGame, 2000);
+            } else {
                 resetRound();
-            }, 2000);
+            }
         }
     }
 
@@ -289,21 +243,14 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (currentMenu === 'start') {
-            // Отрисовка Мини-меню
             ctx.fillStyle = '#0d47a1';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
             ctx.fillStyle = '#fff';
             ctx.font = 'bold 32px Arial';
             ctx.textAlign = 'center';
             ctx.fillText('DOMESTOS BIRDS', canvas.width / 2, 100);
-            
-            // Кнопка Старт
             ctx.fillStyle = '#4caf50';
             ctx.fillRect(220, 150, 160, 60);
-            ctx.strokeStyle = '#fff';
-            ctx.strokeRect(220, 150, 160, 60);
-            
             ctx.fillStyle = '#fff';
             ctx.font = 'bold 20px Arial';
             ctx.fillText('START GAME', canvas.width / 2, 186);
@@ -311,10 +258,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Задний фон гор
         ctx.fillStyle = '#90caf9';
-        ctx.beginPath();
-        ctx.moveTo(0, 300); ctx.lineTo(150, 150); ctx.lineTo(300, 300); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(0, 300); ctx.lineTo(150, 150); ctx.lineTo(300, 300); ctx.fill();
 
         ctx.fillStyle = '#4caf50';
         ctx.fillRect(0, 300, 600, 50);
@@ -323,13 +268,10 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.strokeStyle = '#5d4037';
         ctx.lineWidth = 6;
         ctx.beginPath();
-        ctx.moveTo(sling.x, sling.y);
-        ctx.lineTo(sling.x - 10, sling.y + 60);
-        ctx.moveTo(sling.x, sling.y);
-        ctx.lineTo(sling.x + 15, sling.y + 60);
+        ctx.moveTo(sling.x, sling.y); ctx.lineTo(sling.x - 10, sling.y + 60);
+        ctx.moveTo(sling.x, sling.y); ctx.lineTo(sling.x + 15, sling.y + 60);
         ctx.stroke();
 
-        // Натяжение рогатки
         let mainBird = birds[0];
         if (mainBird && mainBird.isDragging) {
             ctx.strokeStyle = '#e65100';
@@ -341,13 +283,11 @@ document.addEventListener("DOMContentLoaded", () => {
             ctx.stroke();
         }
 
-        // Отрисовка летящих Доместосов
+        // Отрисовка Доместосов
         for (let bird of birds) {
             if (!bird.active) continue;
             ctx.save();
             ctx.translate(bird.x, bird.y);
-            
-            // Флакон Доместоса
             ctx.fillStyle = '#0d47a1';
             ctx.fillRect(-10, -8, 20, 22);
             ctx.fillStyle = '#fff';
@@ -357,8 +297,13 @@ document.addEventListener("DOMContentLoaded", () => {
             ctx.fillText('DOM', -7, 6);
             ctx.fillStyle = '#d50000';
             ctx.fillRect(-5, -14, 10, 6);
-
             ctx.restore();
+        }
+
+        // Отрисовка оставшихся попыток (мини-птички внизу слева)
+        for (let i = 0; i < livesLeft; i++) {
+            ctx.fillStyle = '#0d47a1';
+            ctx.fillRect(15 + i*15, 315, 10, 15);
         }
 
         // Блоки
@@ -366,9 +311,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!b.active) continue;
             ctx.fillStyle = '#b0bec5';
             ctx.fillRect(b.x, b.y, b.w, b.h);
-            ctx.strokeStyle = '#37474f';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(b.x, b.y, b.w, b.h);
         }
 
         // Какашки (цели)
@@ -376,40 +318,31 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!t.active) continue;
             ctx.save();
             ctx.translate(t.x, t.y);
-
             ctx.fillStyle = '#8d6e63';
             ctx.beginPath();
             ctx.arc(0, 4, t.radius, 0, Math.PI * 2);
             ctx.arc(0, -4, t.radius - 3, 0, Math.PI * 2);
             ctx.fill();
-
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(-4, -1, 3, 0, Math.PI*2);
-            ctx.arc(4, -1, 3, 0, Math.PI*2);
-            ctx.fill();
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.arc(-4, -1, 1, 0, Math.PI*2);
-            ctx.arc(4, -1, 1, 0, Math.PI*2);
-            ctx.fill();
-
             ctx.restore();
         }
 
-        // Текст очков
         ctx.fillStyle = '#000';
         ctx.font = 'bold 14px Arial';
         ctx.fillText('Score: ' + score, 15, 25);
-        if (activeBoost) {
-            ctx.fillStyle = '#ff1744';
-            ctx.fillText('BOOST CHARGED: ' + activeBoost.toUpperCase(), 15, 45);
+        ctx.fillText('Birds left: ' + livesLeft, 15, 45);
+
+        // Поражение
+        if (livesLeft <= 0 && birds.every(b => !b.isFlying)) {
+            ctx.fillStyle = '#d50000';
+            ctx.font = 'bold 24px Arial';
+            ctx.fillText('OUT OF AMMO! RESTARTING...', 150, 180);
         }
 
+        // Победа
         if (targets.every(t => !t.active)) {
             ctx.fillStyle = '#2e7d32';
             ctx.font = 'bold 24px Arial';
-            ctx.fillText('CLEANED UP! NEXT ROUND...', 150, 180);
+            ctx.fillText('CLEANED UP! VICTORY!', 150, 180);
         }
     }
 
