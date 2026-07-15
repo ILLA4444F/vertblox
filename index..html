@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>VERTBLOX: Free Virtual Green Sandbox & Building Game</title>
+    <style>
+        /* Общие стили Web 2.0 (Эпоха 2010 года) */
+        body {
+            background: #a5d6a7 url('https://web.archive.org/web/20100528145241im_/http://www.roblox.com/images/Template/sub_background.gif') repeat-x top center;
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            color: #222;
+        }
+
+        /* Главный контейнер */
+        #Container {
+            width: 960px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+            min-height: 100vh;
+            border-left: 1px solid #1b5e20;
+            border-right: 1px solid #1b5e20;
+        }
+
+        /* Шапка сайта */
+        #Header {
+            background: #c8e6c9 linear-gradient(to bottom, #e8f5e9, #c8e6c9);
+            height: 110px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #81c784;
+            position: relative;
+        }
+
+        /* Уникальный зелёный логотип VERTBLOX */
+        .LogoContainer {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Зелёная панель навигации с глянцем */
+        #NavigationBar {
+            background: #2e7d32 linear-gradient(to bottom, #4caf50, #2e7d32);
+            height: 38px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 3px solid #1b5e20;
+        }
+
+        #NavigationBar a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 25px;
+            text-shadow: 1px 1px 1px #1b5e20;
+        }
+
+        #NavigationBar a:hover {
+            color: #ccff90;
+            text-decoration: underline;
+        }
+
+        /* Панель статуса авторизации в шапке */
+        .AuthStatus {
+            font-size: 11px;
+            color: #1b5e20;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .AuthStatus a {
+            color: #2e7d32;
+            text-decoration: none;
+        }
+
+        .AuthStatus a:hover {
+            text-decoration: underline;
+        }
+
+        /* Основной макет страницы */
+        #MainContent {
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Левая колонка (Авторизация) */
+        #LeftColumn {
+            width: 220px;
+            flex-shrink: 0;
+        }
+
+        .WidgetBox {
+            border: 1px solid #81c784;
+            background-color: #f1f8e9;
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 20px;
+            box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
+        }
+
+        .WidgetBox h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #1b5e20;
+            border-bottom: 1px dashed #81c784;
+            padding-bottom: 5px;
+        }
+
+        /* Поля ввода в стиле 2010 */
+        .InputLabel {
+            font-weight: bold;
+            font-size: 11px;
+            color: #333;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        .StyledInput {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #81c784;
+            border-radius: 3px;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+            background-color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+
+        .StyledInput:focus {
+            border-color: #4caf50;
+            outline: none;
+            box-shadow: 0 0 3px rgba(76, 175, 80, 0.5);
+        }
+
+        /* Глянцевые 2010 кнопки */
+        .GreenButton {
+            background: #4caf50 linear-gradient(to bottom, #81c784, #388e3c);
+            border: 1px solid #1b5e20;
+            color: white;
+            padding: 5px 15px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-shadow: 1px 1px 0px #1b5e20;
+            display: inline-block;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .GreenButton:hover {
+            background: #66bb6a linear-gradient(to bottom, #98ee99, #2e7d32);
+        }
+
+        /* Правая колонка (Главное промо-представление) */
+        #RightColumn {
+            flex-grow: 1;
+        }
+
+        /* Большой рекламный блок-слайдер */
+        .HeroBanner {
+            background: #e8f5e9 linear-gradient(to right, #c8e6c9, #e8f5e9);
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .HeroText {
+            max-width: 450px;
+        }
+
+        .HeroText h1 {
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            color: #1b5e20;
+            font-family: "Arial Black", sans-serif;
+        }
+
+        .HeroText p {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #2e7d32;
+            margin: 0 0 20px 0;
+        }
+
+        /* Огромная кнопка "PLAY NOW" */
+        .PlayButton {
+            background: #ff9800 linear-gradient(to bottom, #ffb74d, #f57c00);
+            border: 2px solid #e65100;
+            color: white !important;
+            padding: 12px 35px;
+            font-size: 22px;
+            font-weight: 900;
+            font-family: "Arial Black", sans-serif;
+            text-shadow: 1px 2px 2px #e65100;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.15);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .PlayButton:hover {
+            background: #ffa726 linear-gradient(to bottom, #ffe082, #ef6c00);
+            box-shadow: 1px 1px 0px rgba(0,0,0,0.15);
+        }
+
+        /* Сетка достоинств игры */
+        .PromoGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .PromoCard {
+            border: 1px solid #c8e6c9;
+            background-color: #f1f8e9;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .PromoCard h4 {
+            margin: 10px 0 5px 0;
+            font-size: 14px;
+            color: #1b5e20;
+        }
+
+        .PromoCard p {
+            font-size: 11px;
+            color: #555;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* Футер (Дисклеймеры) */
+        #Footer {
+            border-top: 1px solid #81c784;
+            background-color: #e8f5e9;
+            padding: 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #2e7d32;
+            line-height: 1.6;
+        }
+
+        #Footer a {
+            color: #1b5e20;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        #Footer a:hover {
+            text-decoration: underline;
+        }
+
+        .LegalNotice {
+            margin-top: 10px;
+            font-size: 10px;
+            color: #757575;
+            background-color: #f1f8e9;
+            border: 1px dashed #a5d6a7;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="Container">
+    
+    <!-- Шапка сайта -->
+    <div id="Header">
+        <!-- Авторский Логотип VERTBLOX (SVG) -->
+        <a href="#" class="LogoContainer">
+            <svg width="220" height="50" viewBox="0 0 220 50" xmlns="http://www.w3.org/2000/svg">
+                <!-- 3D эффект букв -->
+                <defs>
+                    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+                        <feDropShadow dx="2" dy="3" stdDeviation="0" flood-color="#1b5e20"/>
+                    </filter>
+                </defs>
+                <!-- Текст VERTBLOX наклонным шрифтом в стиле 2010 -->
+                <text x="5" y="38" fill="#4caf50" font-family="'Arial Black', sans-serif" font-size="32" font-weight="900" font-style="italic" filter="url(#shadow)" letter-spacing="-1">
+                    VERT<tspan fill="#81c784">BLOX</tspan>
+                </text>
+                <!-- Зелёный кубик в логотипе -->
+                <g transform="translate(185, 8)">
+                    <!-- Верхняя грань -->
+                    <polygon points="15,0 30,7 15,14 0,7" fill="#a5d6a7" stroke="#1b5e20" stroke-width="1.5"/>
+                    <!-- Левая грань -->
+                    <polygon points="0,7 15,14 15,30 0,23" fill="#2e7d32" stroke="#1b5e20" stroke-width="1.5"/>
+                    <!-- Правая грань -->
+                    <polygon points="15,14 30,7 30,23 15,30" fill="#4caf50" stroke="#1b5e20" stroke-width="1.5"/>
+                </g>
+            </svg>
+        </a>
+
+        <!-- Блок входа/регистрации -->
+        <div class="AuthStatus">
+            Welcome, Guest! <br>
+            <a href="#">Register</a> | <a href="#">Login</a>
+        </div>
+    </div>
+
+    <!-- Зеленая глянцевая навигация -->
+    <div id="NavigationBar">
+        <a href="#">Home</a>
+        <a href="#">Play Sandbox</a>
+        <a href="#">Catalog</a>
+        <a href="#">Green Forums</a>
+        <a href="#">Builders Union</a>
+        <a href="#">Help</a>
+    </div>
+
+    <!-- Основной блок -->
+    <div id="MainContent">
+        
+        <!-- Левая колонка (Форма входа) -->
+        <div id="LeftColumn">
+            <div class="WidgetBox">
+                <h3>User Login</h3>
+                <form action="#" onsubmit="alert('Это демонстрационный сайт-пародия!'); return false;">
+                    <label class="InputLabel">Username</label>
+                    <input type="text" class="StyledInput" required placeholder="Enter username...">
+                    
+                    <label class="InputLabel">Password</label>
+                    <input type="password" class="StyledInput" required placeholder="••••••••">
+                    
+                    <input type="submit" class="GreenButton" value="Sign In" style="width: 100%;">
+                </form>
+            </div>
+
+            <div class="WidgetBox" style="font-size: 11px; line-height: 1.4;">
+                <h3>Status Update</h3>
+                <strong style="color: #1b5e20;">Users Online:</strong> 4,812 <br>
+                <strong style="color: #1b5e20;">Total Projects:</strong> 142,094 <br>
+                <strong style="color: #1b5e20;">Server Status:</strong> <span style="color: #2e7d32; font-weight: bold;">ONLINE</span>
+            </div>
+        </div>
+
+        <!-- Правая колонка (Промо) -->
+        <div id="RightColumn">
+            
+            <!-- Баннер с призывом играть и 3D-моделью нового аватара -->
+            <div class="HeroBanner">
+                <div class="HeroText">
+                    <h1>A Green World Awaits!</h1>
+                    <p>Vertblox is a completely free, community-driven block sandbox where you can build landscapes, write scripts, and hang out with friends in absolute safety.</p>
+                    <a href="#" class="PlayButton">PLAY NOW!</a>
+                </div>
+
+                <!-- Уникальная пародия на модель R6 (Зелёная вариация вашего аватара) -->
+                <div style="background-color: #ffffff; border: 2px solid #81c784; border-radius: 6px; padding: 10px; width: 140px; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);">
+                    <svg width="120" height="150" viewBox="0 0 120 150">
+                        <defs>
+                            <radialGradient id="grad" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#ffffff"/>
+                                <stop offset="100%" stop-color="#e8f5e9"/>
+                            </radialGradient>
+                        </defs>
+                        <rect width="120" height="150" fill="url(#grad)" rx="4"/>
+                        
+                        <!-- Ноги -->
+                        <rect x="35" y="100" width="22" height="40" fill="#1b5e20" stroke="#000" stroke-width="1.5"/>
+                        <rect x="63" y="100" width="22" height="40" fill="#1b5e20" stroke="#000" stroke-width="1.5"/>
+
+                        <!-- Торс (Зелёно-салатовый) -->
+                        <rect x="35" y="50" width="50" height="50" fill="#2e7d32" stroke="#000" stroke-width="1.5"/>
+                        <!-- Желтый принт/логотип -->
+                        <polygon points="50,55 70,55 60,65" fill="#fff59d"/>
+                        <rect x="58" y="65" width="4" height="35" fill="#fff59d"/>
+
+                        <!-- Левая рука -->
+                        <rect x="10" y="50" width="22" height="45" fill="#a5d6a7" stroke="#000" stroke-width="1.5"/>
+
+                        <!-- Правая рука -->
+                        <rect x="88" y="50" width="22" height="45" fill="#a5d6a7" stroke="#000" stroke-width="1.5"/>
+
+                        <!-- Шея -->
+                        <rect x="53" y="44" width="14" height="6" fill="#a5d6a7" stroke="#000" stroke-width="1.5"/>
+
+                        <!-- Голова (Классическая салатовая) -->
+                        <rect x="45" y="18" width="30" height="26" fill="#a5d6a7" rx="3" stroke="#000" stroke-width="1.5"/>
+                        <!-- Фиолетовые пиксельные очки -->
+                        <rect x="49" y="24" width="10" height="6" fill="#6a1b9a" stroke="#000" stroke-width="1"/>
+                        <rect x="61" y="24" width="10" height="6" fill="#6a1b9a" stroke="#000" stroke-width="1"/>
+                        <!-- Рот -->
+                        <path d="M54,36 Q60,40 66,36" fill="none" stroke="#000" stroke-width="2"/>
+                    </svg>
+                    <span style="font-size: 10px; font-weight: bold; color: #1b5e20;">VertPlayer (2010)</span>
+                </div>
+            </div>
+
+            <!-- Достоинства -->
+            <div class="PromoGrid">
+                
+                <!-- Карта 1 -->
+                <div class="PromoCard">
+                    <!-- Иконка оригинального зеленого кубика -->
+                    <svg width="40" height="40" viewBox="0 0 40 40" style="margin: 0 auto 5px auto; display: block;">
+                        <polygon points="20,2 38,11 20,20 2,11" fill="#81c784" stroke="#1b5e20" stroke-width="1.5"/>
+                        <polygon points="2,11 20,20 20,38 2,29" fill="#2e7d32" stroke="#1b5e20" stroke-width="1.5"/>
+                        <polygon points="20,20 38,11 38,29 20,38" fill="#4caf50" stroke="#1b5e20" stroke-width="1.5"/>
+                    </svg>
+                    <h4>Easy Crafting</h4>
+                    <p>Place green bricks, shape them into physical objects, and see physics in action immediately.</p>
+                </div>
+
+                <!-- Карта 2 -->
+                <div class="PromoCard">
+                    <!-- Иконка двух персонажей -->
+                    <svg width="40" height="40" viewBox="0 0 40 40" style="margin: 0 auto 5px auto; display: block;">
+                        <!-- Игрок 1 -->
+                        <rect x="5" y="15" width="12" height="18" fill="#4caf50" stroke="#1b5e20" stroke-width="1"/>
+                        <circle cx="11" cy="9" r="5" fill="#a5d6a7" stroke="#1b5e20" stroke-width="1"/>
+                        <!-- Игрок 2 -->
+                        <rect x="23" y="15" width="12" height="18" fill="#ff9800" stroke="#e65100" stroke-width="1"/>
+                        <circle cx="29" cy="9" r="5" fill="#ffe082" stroke="#e65100" stroke-width="1"/>
+                    </svg>
+                    <h4>Multiplayer Safe</h4>
+                    <p>We strictly moderate the sandbox so you can enjoy crafting and chatting with no worries.</p>
+                </div>
+
+                <!-- Карта 3 -->
+                <div class="PromoCard">
+                    <!-- Иконка меча -->
+                    <svg width="40" height="40" viewBox="0 0 40 40" style="margin: 0 auto 5px auto; display: block;">
+                        <rect x="18" y="2" width="4" height="24" fill="#cfd8dc" stroke="#37474f" stroke-width="1" transform="rotate(45 20 20)"/>
+                        <rect x="10" y="26" width="20" height="4" fill="#ffb74d" stroke="#e65100" stroke-width="1" transform="rotate(45 20 20)"/>
+                        <rect x="18" y="28" width="4" height="8" fill="#8d6e63" stroke="#4e342e" stroke-width="1" transform="rotate(45 20 20)"/>
+                    </svg>
+                    <h4>Epic Minigames</h4>
+                    <p>Take part in block arenas, run through obstacles, or drive blocky racing cars.</p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Подвал сайта с дисклеймерами -->
+    <div id="Footer">
+        <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a> | <a href="#">About Vertblox</a> | <a href="#">Contact Support</a>
+        <br>
+        VERTBLOX © 2010 - 2026. All rights reserved.
+        
+        <div class="LegalNotice">
+            <strong>Юридическая информация / Disclaimer:</strong><br>
+            Данный сайт является исключительно некоммерческой художественной пародией. Мы не связаны, не ассоциированы и не спонсируемся корпорацией Roblox Corporation. Все товарные знаки, оригинальные визуальные образы и механики являются собственностью их законных правообладателей. Наш сайт создан фанатами исключительно для образовательных целей, демонстрации навыков веб-разработки (CSS/HTML) и развлечения.
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
