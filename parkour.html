@@ -6,35 +6,37 @@
     <title>VERTBLOX: 3D Parkour</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body { touch-action: none; background-color: #e3f2fd; }
+        body { touch-action: none; background-color: #e3f2fd; margin: 0; padding: 0; }
         .GameContainerBox { border: 1px solid #0d47a1; background-color: #f6f9fc; padding: 10px; text-align: center; }
-        .GameHeader { font-size: 18px; font-weight: bold; color: #0d47a1; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .GameHeader { font-size: 18px; font-weight: bold; color: #0d47a1; text-align: left; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         
-        .CanvasWrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; background: #90caf9; }
+        .CanvasWrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; background: #90caf9; overflow: hidden; }
         canvas { background-color: #80deea; border: 3px solid #0d47a1; display: block; width: 100%; height: auto; }
 
         .FullscreenBtn { background: #0d47a1; color: white; border: none; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 3px; }
 
-        /* Джойстик для бега */
+        /* Круговой сенсорный джойстик */
         .JoystickContainer {
             position: absolute;
             bottom: 20px;
             left: 20px;
             width: 100px;
             height: 100px;
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(13, 71, 161, 0.4);
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(13, 71, 161, 0.5);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: none;
         }
         .JoystickStick {
             width: 40px;
             height: 40px;
-            background: rgba(13, 71, 161, 0.7);
+            background: rgba(13, 71, 161, 0.8);
             border: 2px solid #fff;
             border-radius: 50%;
+            touch-action: none;
         }
 
         /* Кнопка Прыжка */
@@ -42,17 +44,19 @@
             position: absolute;
             bottom: 25px;
             right: 25px;
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 152, 0, 0.7);
-            border: 2px solid #e65100;
+            width: 75px;
+            height: 75px;
+            background: rgba(255, 152, 0, 0.8);
+            border: 3px solid #e65100;
             border-radius: 50%;
             color: #fff;
             font-weight: bold;
+            font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
+            touch-action: none;
         }
 
         .ControlsHelp { margin-top: 10px; font-size: 11px; background-color: #fff; padding: 6px; border: 1px dashed #0d47a1; display: inline-block; }
@@ -68,25 +72,23 @@
     <div id="MainBody">
         <div class="GameContainerBox">
             <div class="GameHeader">
-                <span>VERTBLOX 3D PARKOUR</span>
+                <span>VERTBLOX 3D PARKOUR (FIXED)</span>
                 <button class="FullscreenBtn" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
             </div>
 
             <div class="CanvasWrapper" id="gameArea">
                 <canvas id="parkourCanvas" width="500" height="350"></canvas>
                 
-                <!-- Левый Стик -->
                 <div class="JoystickContainer" id="joystick">
                     <div class="JoystickStick" id="stick"></div>
                 </div>
 
-                <!-- Правая Кнопка Прыжка -->
                 <div class="JumpButton" id="jumpBtn">JUMP</div>
             </div>
 
             <div class="ControlsHelp">
-                <strong>Управление:</strong> Стик слева на экране (или WASD на ПК) — перемещение кубика в 3D.<br>
-                Кнопка JUMP справа (или Пробел на ПК) — прыжок. Доберись до финального золотого блока!
+                <strong>Управление:</strong> Стик на экране (или WASD / Стрелочки на клавиатуре) — движение.<br>
+                Кнопка JUMP (или Пробел на ПК) — прыжок. Доберись до верхнего золотого блока!
             </div>
             <br>
             <a href="games.html" class="BackBtn">← К списку игр</a>
@@ -99,212 +101,239 @@ document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById('parkourCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Игрок в 3D-пространстве
+    // Настройки физики игры
     const player = {
-        x: 250, y: 300, z: 0,
-        vx: 0, vy: 0, vz: 0,
-        width: 16, height: 16, depth: 16,
-        speed: 3,
-        onGround: true
+        x: 230,
+        y: 280, // Физическая позиция на экране
+        vx: 0,
+        vy: 0,
+        width: 20,
+        height: 20,
+        speed: 3.5,
+        gravity: 0.35,
+        jumpForce: -7.5,
+        onGround: false
     };
 
-    const gravity = 0.35;
+    // Плавное слежение камеры по вертикали
+    let cameraY = 0;
 
-    // Платформы в 3D (x, y, z_высота, w, h, d_глубина)
+    // Платформы (X, Y, Ширина, Высота, Цвет, Тип)
     const platforms = [
-        { x: 200, y: 280, z: 0, w: 100, h: 40, d: 20, color: '#8d6e63' }, // Стартовая
-        { x: 220, y: 200, z: 25, w: 50, h: 30, d: 20, color: '#4caf50' },
-        { x: 310, y: 150, z: 50, w: 40, h: 30, d: 20, color: '#2196f3' },
-        { x: 200, y: 110, z: 80, w: 45, h: 30, d: 20, color: '#9c27b0' },
-        { x: 120, y: 140, z: 110, w: 40, h: 30, d: 20, color: '#e91e63' },
-        { x: 150, y: 80, z: 140, w: 40, h: 30, d: 20, color: '#ff9800' },
-        { x: 240, y: 60, z: 170, w: 50, h: 30, d: 20, color: '#ffd700' } // Финиш (Золото)
+        { x: 150, y: 310, w: 200, h: 20, color: '#8d6e63', isFinish: false }, // Старт
+        { x: 120, y: 250, w: 80,  h: 15, color: '#4caf50', isFinish: false },
+        { x: 260, y: 200, w: 80,  h: 15, color: '#2196f3', isFinish: false },
+        { x: 160, y: 140, w: 70,  h: 15, color: '#9c27b0', isFinish: false },
+        { x: 270, y: 80,  w: 80,  h: 15, color: '#e91e63', isFinish: false },
+        { x: 140, y: 20,  w: 80,  h: 15, color: '#ff9800', isFinish: false },
+        { x: 220, y: -40, w: 60,  h: 15, color: '#ffd700', isFinish: true }   // Финиш (Золотой)
     ];
 
     let keys = {};
     let isWon = false;
 
-    // Джойстик
+    // Сенсорный джойстик
     const joystick = document.getElementById('joystick');
     const stick = document.getElementById('stick');
     let joyX = 0, joyY = 0;
     let isJoyActive = false;
 
-    joystick.addEventListener('touchstart', (e) => { isJoyActive = true; moveStick(e.touches[0]); }, { passive: true });
-    window.addEventListener('touchmove', (e) => { if (isJoyActive) moveStick(e.touches[0]); }, { passive: true });
+    joystick.addEventListener('touchstart', (e) => { 
+        isJoyActive = true; 
+        moveStick(e.touches[0]); 
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => { 
+        if (isJoyActive) moveStick(e.touches[0]); 
+    }, { passive: true });
+
     window.addEventListener('touchend', () => {
         isJoyActive = false;
-        stick.style.transform = 'translate(0px,0px)';
+        stick.style.transform = 'translate(0px, 0px)';
         joyX = 0; joyY = 0;
     });
 
     function moveStick(touch) {
         const rect = joystick.getBoundingClientRect();
-        const cX = rect.left + rect.width/2;
-        const cY = rect.top + rect.height/2;
+        const cX = rect.left + rect.width / 2;
+        const cY = rect.top + rect.height / 2;
         let dx = touch.clientX - cX;
         let dy = touch.clientY - cY;
         const dist = Math.sqrt(dx*dx + dy*dy);
         const maxD = 40;
 
-        if (dist > maxD) { dx = (dx/dist)*maxD; dy = (dy/dist)*maxD; }
+        if (dist > maxD) { 
+            dx = (dx / dist) * maxD; 
+            dy = (dy / dist) * maxD; 
+        }
         stick.style.transform = `translate(${dx}px, ${dy}px)`;
         joyX = dx / maxD;
         joyY = dy / maxD;
     }
 
-    // Тач прыжка
-    document.getElementById('jumpBtn').addEventListener('touchstart', (e) => {
+    // Обработка кнопки прыжка
+    const jumpBtn = document.getElementById('jumpBtn');
+    jumpBtn.addEventListener('touchstart', (e) => {
         e.preventDefault();
         triggerJump();
     }, { passive: false });
 
-    window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key === ' ') triggerJump(); });
+    window.addEventListener('keydown', e => { 
+        keys[e.key.toLowerCase()] = true; 
+        if (e.key === ' ' || e.key === 'arrowup') triggerJump(); 
+    });
     window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
     function triggerJump() {
         if (player.onGround) {
-            player.vz = 6.5;
+            player.vy = player.jumpForce;
             player.onGround = false;
         }
         if (isWon) resetGame();
     }
 
     function resetGame() {
-        player.x = 250; player.y = 300; player.z = 0;
-        player.vx = 0; player.vy = 0; player.vz = 0;
-        player.onGround = true;
+        player.x = 230;
+        player.y = 280;
+        player.vx = 0;
+        player.vy = 0;
+        player.onGround = false;
+        cameraY = 0;
         isWon = false;
-    }
-
-    // Проекция 3D в 2D (Изометрия)
-    function project3D(x, y, z) {
-        // z приподнимает объект вверх по экрану, y наклоняет перспективу
-        return {
-            px: x - (y - 300) * 0.25,
-            py: y - z
-        };
     }
 
     function update() {
         if (isWon) return;
 
-        // Ввод движения
-        let dx = 0, dy = 0;
-        if (keys['w'] || keys['arrowup']) dy = -player.speed;
-        if (keys['s'] || keys['arrowdown']) dy = player.speed;
-        if (keys['a'] || keys['arrowleft']) dx = -player.speed;
-        if (keys['d'] || keys['arrowright']) dx = player.speed;
-
+        // 1. Движение по оси X (Клавиатура + Джойстик)
+        let moveX = 0;
+        if (keys['a'] || keys['arrowleft']) moveX = -player.speed;
+        if (keys['d'] || keys['arrowright']) moveX = player.speed;
+        
         if (isJoyActive) {
-            dx = joyX * player.speed;
-            dy = joyY * player.speed;
+            moveX = joyX * player.speed;
         }
 
-        player.x += dx;
-        player.y += dy;
+        player.x += moveX;
 
-        // Физика прыжка / гравитации
-        player.z += player.vz;
-        if (!player.onGround) {
-            player.vz -= gravity;
-        }
+        // Не даем вылететь за края экрана по горизонтали
+        if (player.x < 0) player.x = 0;
+        if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
 
-        // Проверка приземления на платформы
-        let onPlatform = false;
-        for (let plat of platforms) {
-            if (player.x + player.width > plat.x && player.x < plat.x + plat.w &&
-                player.y + player.depth > plat.y && player.y < plat.y + plat.h) {
-                
-                // Проверяем уровень высоты (z)
-                if (player.z >= plat.z && player.z + player.vz <= plat.z + 4) {
-                    player.z = plat.z;
-                    player.vz = 0;
+        // 2. Гравитация и движение по оси Y
+        player.vy += player.gravity;
+        player.y += player.vy;
+
+        // 3. Коллизии с платформами
+        player.onGround = false;
+        
+        // Падаем вниз? Только тогда проверяем приземление
+        if (player.vy >= 0) {
+            for (let plat of platforms) {
+                if (player.x + player.width > plat.x && 
+                    player.x < plat.x + plat.w &&
+                    player.y + player.height >= plat.y && 
+                    player.y + player.height - player.vy <= plat.y + 8) {
+                    
+                    player.y = plat.y - player.height;
+                    player.vy = 0;
                     player.onGround = true;
-                    onPlatform = true;
 
-                    // Если прыгнули на золотой финиш
-                    if (plat.color === '#ffd700') {
+                    if (plat.isFinish) {
                         isWon = true;
                     }
+                    break;
                 }
             }
         }
 
-        if (!onPlatform && player.z > 0) {
-            player.onGround = false;
+        // 4. Падение в пропасть (если упал ниже текущего экрана камеры)
+        if (player.y > canvas.height + cameraY + 100) {
+            resetGame();
         }
 
-        // Упал в бездну
-        if (player.z < -100) {
-            resetGame();
+        // 5. Плавный скролл камеры вверх за игроком
+        let targetCameraY = player.y - 180;
+        if (targetCameraY < cameraY) {
+            cameraY += (targetCameraY - cameraY) * 0.1; // Плавное движение
+        } else if (cameraY < 0 && player.y > 200) {
+            // Возвращаем камеру назад, если игрок падает, но еще жив
+            cameraY += (targetCameraY - cameraY) * 0.05;
         }
     }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Рисуем небо и солнце
-        ctx.fillStyle = '#80deea';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        // Смещаем весь мир на значение скролла камеры
+        ctx.translate(0, -cameraY);
+
+        // Рисуем задний план в зависимости от высоты (эффект неба)
+        let grad = ctx.createLinearGradient(0, -500, 0, 350);
+        grad.addColorStop(0, '#0d47a1'); // Космос наверху
+        grad.addColorStop(0.5, '#4fc3f7'); // Дневное небо
+        grad.addColorStop(1, '#80deea'); // Бирюзовый низ
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, -600, canvas.width, canvas.height + 1000);
+
+        // Декоративное солнце/луна
         ctx.fillStyle = '#fff9c4';
-        ctx.beginPath(); ctx.arc(420, 60, 30, 0, Math.PI*2); ctx.fill();
-
-        // Рендерим платформы в 3D
-        platforms.forEach(plat => {
-            let pProj = project3D(plat.x, plat.y, plat.z);
-            
-            // Тень платформы на земле
-            ctx.fillStyle = 'rgba(0,0,0,0.15)';
-            ctx.fillRect(pProj.px, plat.y + 40, plat.w, plat.h);
-
-            // Основная грань платформы
-            ctx.fillStyle = plat.color;
-            ctx.fillRect(pProj.px, pProj.py, plat.w, plat.h);
-            
-            // 3D-объем (боковая грань)
-            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            ctx.beginPath();
-            ctx.moveTo(pProj.px, pProj.py + plat.h);
-            ctx.lineTo(pProj.px + 10, pProj.py + plat.h + 10);
-            ctx.lineTo(pProj.px + plat.w + 10, pProj.py + plat.h + 10);
-            ctx.lineTo(pProj.px + plat.w, pProj.py + plat.h);
-            ctx.closePath();
-            ctx.fill();
-        });
-
-        // Рендерим кубик игрока в 3D
-        let playerProj = project3D(player.x, player.y, player.z);
-        
-        // Тень кубика
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(playerProj.px, player.y + 10, player.width, 6);
-
-        // Игрок (Красный 3D-куб)
-        ctx.fillStyle = '#d50000';
-        ctx.fillRect(playerProj.px, playerProj.py - player.height, player.width, player.height);
-        
-        // Верхняя крышка куба
-        ctx.fillStyle = '#ff1744';
-        ctx.beginPath();
-        ctx.moveTo(playerProj.px, playerProj.py - player.height);
-        ctx.lineTo(playerProj.px + 5, playerProj.py - player.height - 5);
-        ctx.lineTo(playerProj.px + player.width + 5, playerProj.py - player.height - 5);
-        ctx.lineTo(playerProj.px + player.width, playerProj.py - player.height);
-        ctx.closePath();
+        ctx.beginPath(); 
+        ctx.arc(380, 50, 25, 0, Math.PI*2); 
         ctx.fill();
 
-        // Финишная надпись
+        // 1. Отрисовка платформ (с 3D-объемом)
+        platforms.forEach(plat => {
+            // Тень платформы (чуть ниже)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(plat.x + 4, plat.y + 4, plat.w, plat.h);
+
+            // Боковая 3D-грань
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+            ctx.fillRect(plat.x, plat.y + 4, plat.w, plat.h);
+
+            // Лицевая сторона платформы
+            ctx.fillStyle = plat.color;
+            ctx.fillRect(plat.x, plat.y, plat.w, plat.h - 4);
+
+            // Световой блик сверху платформы
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.fillRect(plat.x, plat.y, plat.w, 2);
+        });
+
+        // 2. Отрисовка игрока (3D-кубик)
+        // Тень под кубиком на текущей платформе (если он близко к земле)
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(player.x + 2, player.y + player.height - 2, player.width - 4, 4);
+
+        // Боковые темные грани куба для объема
+        ctx.fillStyle = '#b71c1c'; 
+        ctx.fillRect(player.x, player.y + 4, player.width, player.height - 4);
+
+        // Передняя часть кубика (светлая)
+        ctx.fillStyle = '#ff1744';
+        ctx.fillRect(player.x, player.y, player.width, player.height - 4);
+
+        // "Лицо" или блик кубика
+        ctx.fillStyle = '#ffd54f';
+        ctx.fillRect(player.x + 4, player.y + 4, 4, 4);
+        ctx.fillRect(player.x + 12, player.y + 4, 4, 4);
+
+        ctx.restore();
+
+        // Статический интерфейс (поверх камеры)
         if (isWon) {
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = 'rgba(0,0,0,0.85)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#ffd700';
             ctx.font = 'bold 28px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('PARKOUR MASTER!', canvas.width/2, canvas.height/2);
+            ctx.fillText('PARKOUR MASTER!', canvas.width / 2, canvas.height / 2 - 10);
             ctx.fillStyle = '#fff';
             ctx.font = '14px Arial';
-            ctx.fillText('Click JUMP or Space to run again!', canvas.width/2, canvas.height/2 + 30);
+            ctx.fillText('Ты покорил вершину VERTBLOX!', canvas.width / 2, canvas.height / 2 + 20);
+            ctx.fillText('Нажми JUMP или Пробел для перезапуска', canvas.width / 2, canvas.height / 2 + 45);
             ctx.textAlign = 'left';
         }
     }
