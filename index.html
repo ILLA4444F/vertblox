@@ -3,131 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>VERTBLOX: Free Virtual Sandbox & Building Game</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        /* Точные цвета и фон оригинального Roblox 2010 */
-        body {
-            background: #769ecb url('https://web.archive.org/web/20100528145241im_/http://www.roblox.com/images/Template/sub_background.gif') repeat-x top center;
-            font-family: Arial, Helvetica, sans-serif;
-            margin: 0;
-            padding: 0;
-            font-size: 12px;
-            color: #333;
-        }
-
-        /* Главный контейнер сайта */
-        #Container {
-            width: 900px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.6);
-            min-height: 100vh;
-            border-left: 1px solid #002277;
-            border-right: 1px solid #002277;
-        }
-
-        /* Шапка 2010 года */
-        #Header {
-            background: #a9d0f5 url('https://web.archive.org/web/20100528145241im_/http://www.roblox.com/images/Template/sub_background.gif') repeat-x bottom center;
-            height: 95px;
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #7795bd;
-        }
-
-        .LogoContainer {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-        }
-
-        .LogoText {
-            font-size: 44px;
-            font-weight: 900;
-            color: #d02020;
-            text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000;
-            font-family: "Arial Black", sans-serif;
-            letter-spacing: -3px;
-            font-style: normal;
-        }
-
-        .AuthStatus {
-            font-size: 11px;
-            color: #002277;
-            text-align: right;
-            font-weight: bold;
-        }
-
-        .AuthStatus a {
-            color: #0055c5;
-            text-decoration: none;
-        }
-
-        .AuthStatus a:hover {
-            text-decoration: underline;
-        }
-
-        /* Каноничная синяя панель навигации */
-        #NavigationBar {
-            background: #2e639e linear-gradient(to bottom, #538cc6, #2e639e);
-            height: 34px;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            border-bottom: 2px solid #002277;
-        }
-
-        #NavigationBar a {
-            color: #ffffff;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 12px;
-            margin-right: 20px;
-            text-shadow: 1px 1px 1px #002277;
-        }
-
-        #NavigationBar a:hover {
-            color: #ffeb3b;
-            text-decoration: underline;
-        }
-
-        /* Основной контент страницы */
-        #MainBody {
-            padding: 15px;
-            display: flex;
-            gap: 15px;
-        }
-
-        /* Левая колонка (Sidebar) */
-        #LeftColumn {
-            width: 190px;
-            flex-shrink: 0;
-        }
-
-        .WidgetBox {
-            border: 1px solid #7795bd;
-            background-color: #e2ebf5;
-            padding: 10px;
-            margin-bottom: 15px;
-        }
-
-        .WidgetBox h3 {
-            margin: -10px -10px 10px -10px;
-            background: #6a95cc linear-gradient(to bottom, #8cb1e0, #4c7bb8);
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 5px 10px;
-            border-bottom: 1px solid #7795bd;
-        }
-
-        /* Правая промо-колонна */
-        #RightColumn {
-            flex-grow: 1;
-        }
-
-        /* Рекламный баннер */
         .HeroBanner {
             background: #e1ebf4 url('https://web.archive.org/web/20100528145241im_/http://www.roblox.com/images/Template/sub_background.gif') repeat-x top center;
             border: 1px solid #7795bd;
@@ -137,32 +14,8 @@
             justify-content: space-between;
             margin-bottom: 20px;
         }
-
-        .HeroText {
-            max-width: 420px;
-        }
-
-        .HeroText h1 {
-            font-size: 26px;
-            margin: 0 0 5px 0;
-            color: #002277;
-            font-weight: bold;
-        }
-
-        .HeroText h2 {
-            font-size: 16px;
-            color: #d02020;
-            margin: 0 0 15px 0;
-            font-weight: bold;
-        }
-
-        .HeroText p {
-            font-size: 12px;
-            line-height: 1.4;
-            color: #444;
-            margin: 0 0 20px 0;
-        }
-
+        .HeroText h1 { font-size: 26px; margin: 0 0 5px 0; color: #002277; }
+        .HeroText h2 { font-size: 16px; color: #d02020; margin: 0 0 15px 0; }
         .PlayButton {
             background: #ff9900 linear-gradient(to bottom, #ffb84d, #e68a00);
             border: 1px solid #cc7a00;
@@ -174,186 +27,56 @@
             text-decoration: none;
             display: inline-block;
             border-radius: 4px;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            cursor: pointer;
         }
-
-        /* ИНТЕРФЕЙС РЕДАКТОРА АВАТАРА (Новый блок 2010-style) */
-        .CustomizerBox {
-            border: 1px solid #7795bd;
-            background-color: #f6f9fc;
-            border-radius: 4px;
-            padding: 15px;
-            margin-bottom: 20px;
+        .PlayButton:hover {
+            background: #e68a00;
         }
-
-        .CustomizerHeader {
-            font-size: 16px;
-            font-weight: bold;
-            color: #002277;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #7795bd;
-            padding-bottom: 5px;
-        }
-
-        .CustomizerLayout {
+        .FeatureRow {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: flex-start;
+            border-bottom: 1px dashed #7795bd;
+            padding-bottom: 15px;
+            margin-top: 15px;
         }
-
-        /* 3D-Отрендеренная превью-модель персонажа */
-        .AvatarBox {
-            background-color: #ffffff;
-            border: 1px solid #7795bd;
-            padding: 8px;
-            width: 150px;
-            text-align: center;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-            flex-shrink: 0;
-        }
-
-        /* Панель управления цветами и вещами */
-        .ControlsPanel {
-            flex-grow: 1;
-        }
-
-        .ControlSection {
-            margin-bottom: 15px;
-        }
-
-        .ControlSection h4 {
-            margin: 0 0 8px 0;
-            font-size: 12px;
-            color: #002277;
-            font-weight: bold;
-        }
-
-        /* Выбор цветов */
-        .ColorGrid {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .ColorDot {
-            width: 24px;
-            height: 24px;
-            border: 1px solid #7795bd;
-            cursor: pointer;
-            border-radius: 3px;
-            transition: transform 0.1s ease;
-        }
-
-        .ColorDot:hover {
-            transform: scale(1.15);
-            border-color: #002277;
-        }
-
-        .ColorDot.active {
-            border: 2px solid #000;
-            box-shadow: 0 0 3px rgba(0,0,0,0.5);
-        }
-
-        /* Кнопки переключения одежды и аксессуаров */
-        .ItemSelector {
-            display: flex;
-            gap: 10px;
-        }
-
-        .ItemBtn {
-            background: #e1ebf5 linear-gradient(to bottom, #ffffff, #cedbe8);
-            border: 1px solid #7795bd;
-            color: #002277;
-            padding: 5px 12px;
-            font-weight: bold;
-            font-size: 11px;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-
-        .ItemBtn.active {
-            background: #2e639e linear-gradient(to bottom, #538cc6, #2e639e);
-            color: #ffffff;
-            border-color: #002277;
-        }
-
-        /* Футер */
-        #Footer {
-            border-top: 1px solid #7795bd;
-            padding: 15px;
-            text-align: center;
-            font-size: 11px;
-            color: #555;
-            background-color: #e2ebf5;
-        }
-
-        #Footer a {
-            color: #0055c5;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        #Footer a:hover {
-            text-decoration: underline;
-        }
-
-        .Disclaimer {
-            margin-top: 10px;
-            font-size: 10px;
-            color: #777;
-            background-color: #fff;
-            border: 1px dashed #7795bd;
-            padding: 8px;
-            border-radius: 3px;
-        }
+        .FeatureIcon { width: 48px; height: 48px; flex-shrink: 0; }
+        .FeatureText h3 { font-size: 14px; margin: 0 0 4px 0; color: #002277; }
     </style>
 </head>
 <body>
 
 <div id="Container">
-    
-    <!-- Шапка сайта -->
     <div id="Header">
-        <!-- Логотип VERTBLOX в стиле ROBLOX 2010 -->
-        <a href="#" class="LogoContainer">
-            <span class="LogoText">VERTBLOX</span>
-        </a>
-
-        <!-- Авторизация -->
+        <!-- Логотип теперь ведет на главную -->
+        <a href="index.html" class="LogoContainer"><span class="LogoText">VERTBLOX</span></a>
         <div class="AuthStatus">
-            Logged in as: <a href="#" style="font-weight: bold;" id="usernameLabel">4444_F</a><br>
-            <a href="#">My Settings</a> | <a href="#">Logout</a>
+            Logged in as: <a href="avatar.html" style="font-weight: bold;">4444_F</a><br>
+            <!-- Ссылки в шапке ведут на страницу аватара -->
+            <a href="avatar.html">My Character</a> | <a href="index.html" onclick="alert('Вы вышли из аккаунта (демо-режим)'); return false;">Logout</a>
         </div>
     </div>
 
-    <!-- Навигационная панель -->
     <div id="NavigationBar">
-        <a href="#">My VERTBLOX</a>
-        <a href="#">Games</a>
-        <a href="#">Catalog</a>
-        <a href="#">People</a>
-        <a href="#">Builders Club</a>
-        <a href="#">Forum</a>
-        <a href="#">Help</a>
+        <!-- Вкладки меню ведут на нужные страницы -->
+        <a href="index.html" class="active">Home</a>
+        <a href="games.html">Games</a>
+        <a href="avatar.html">Avatar</a>
+        <a href="games.html">Catalog</a>
+        <a href="https://github.com/ILLA4444F/vertblox" target="_blank">Forum</a>
     </div>
 
-    <!-- Основной блок сайта -->
     <div id="MainBody">
-        
-        <!-- Левая колонка (Sidebar) -->
         <div id="LeftColumn">
-            <!-- Блок профиля -->
             <div class="WidgetBox">
                 <h3>My Account</h3>
                 <div style="font-size: 11px; line-height: 1.5;">
                     <strong>Tickets:</strong> <span style="color: #006600;">124 Tix</span><br>
                     <strong>VertBucks:</strong> <span style="color: #b30000;">10 VB</span><br>
-                    <strong>Rank:</strong> Member
+                    <strong>Rank:</strong> Member<br>
+                    <a href="avatar.html" style="color: #0055c5; font-weight: bold; text-decoration: none; display: inline-block; margin-top: 5px;">Edit Avatar →</a>
                 </div>
             </div>
-
-            <!-- Блок статистики сайта -->
             <div class="WidgetBox">
                 <h3>Site Statistics</h3>
                 <div style="font-size: 11px; line-height: 1.5; color: #555;">
@@ -363,214 +86,37 @@
             </div>
         </div>
 
-        <!-- Правая колонка (Главный контент) -->
         <div id="RightColumn">
-            
-            <!-- Рекламный баннер -->
             <div class="HeroBanner">
                 <div class="HeroText">
                     <h1>VERTBLOX Virtual World</h1>
                     <h2>VERTBLOX is Free!</h2>
                     <p>Build your own games, explore vast user-created worlds, and play with thousands of other players online in a completely safe block environment.</p>
-                    <a href="#" class="PlayButton" onclick="alert('Launching VERTBLOX Player...');">Play Now!</a>
+                    <!-- Кнопка "Browse Games" теперь ведет на страницу игр -->
+                    <a href="games.html" class="PlayButton">Browse Games</a>
                 </div>
             </div>
 
-            <!-- ИНТЕРАКТИВНЫЙ КОНСТРУКТОР АВАТАРА -->
-            <div class="CustomizerBox">
-                <div class="CustomizerHeader">Character Customizer (2010 Edition)</div>
-                
-                <div class="CustomizerLayout">
-                    
-                    <!-- Превью аватара (SVG, управляемый JavaScript) -->
-                    <div class="AvatarBox">
-                        <svg width="130" height="160" viewBox="0 0 120 150" id="avatarSvg">
-                            <defs>
-                                <radialGradient id="avatarBg" cx="50%" cy="50%" r="50%">
-                                    <stop offset="0%" stop-color="#ffffff"/>
-                                    <stop offset="100%" stop-color="#e2ebf5"/>
-                                </radialGradient>
-                            </defs>
-                            <rect width="120" height="150" fill="url(#avatarBg)" rx="3"/>
-                            
-                            <!-- Ноги -->
-                            <rect id="partLegL" x="35" y="105" width="22" height="38" fill="#151515" stroke="#000" stroke-width="1.2"/>
-                            <rect id="partLegR" x="63" y="105" width="22" height="38" fill="#151515" stroke="#000" stroke-width="1.2"/>
-
-                            <!-- Торс -->
-                            <rect id="partTorso" x="35" y="55" width="50" height="50" fill="#2d2d2d" stroke="#000" stroke-width="1.2"/>
-                            
-                            <!-- Принт на торсе (переключается скриптом) -->
-                            <g id="torsoPrint">
-                                <polygon points="50,58 70,58 60,68" fill="#fcd303"/>
-                                <rect x="58" y="68" width="4" height="37" fill="#fcd303"/>
-                            </g>
-
-                            <!-- Левая рука -->
-                            <rect id="partArmL" x="11" y="55" width="22" height="45" fill="#2d2d2d" stroke="#000" stroke-width="1.2"/>
-                            <rect id="partHandL" x="11" y="94" width="22" height="6" fill="#fcd303"/> <!-- кисть -->
-
-                            <!-- Правая рука -->
-                            <rect id="partArmR" x="87" y="55" width="22" height="45" fill="#2d2d2d" stroke="#000" stroke-width="1.2"/>
-                            <rect id="partHandR" x="87" y="94" width="22" height="6" fill="#fcd303"/> <!-- кисть -->
-
-                            <!-- Шея -->
-                            <rect id="partNeck" x="53" y="49" width="14" height="6" fill="#fcd303" stroke="#000" stroke-width="1.2"/>
-
-                            <!-- Голова -->
-                            <rect id="partHead" x="45" y="23" width="30" height="26" fill="#fcd303" rx="3" stroke="#000" stroke-width="1.2"/>
-                            
-                            <!-- Очки (рисуются или скрываются скриптом) -->
-                            <g id="glasses" style="display: block;">
-                                <rect x="49" y="29" width="10" height="5" fill="#5e35b1" stroke="#000" stroke-width="0.8"/>
-                                <rect x="61" y="29" width="10" height="5" fill="#5e35b1" stroke="#000" stroke-width="0.8"/>
-                                <line x1="59" y1="31" x2="61" y2="31" stroke="#000" stroke-width="1"/>
-                            </g>
-
-                            <!-- Шляпа (рисуется или скрывается скриптом) -->
-                            <g id="classicHat" style="display: none;">
-                                <ellipse cx="60" cy="22" rx="22" ry="4" fill="#d02020" stroke="#000" stroke-width="1"/>
-                                <rect x="48" y="10" width="24" height="12" fill="#d02020" stroke="#000" stroke-width="1"/>
-                                <rect x="48" y="18" width="24" height="2" fill="#fff"/>
-                            </g>
-
-                            <!-- Улыбка -->
-                            <path d="M54,39 Q60,43 66,39" fill="none" stroke="#000" stroke-width="1.5"/>
-                        </svg>
-                        <div style="font-size: 11px; font-weight: bold; color: #002277; margin-top: 5px;">4444_F</div>
-                    </div>
-
-                    <!-- Панель кастомизации -->
-                    <div class="ControlsPanel">
-                        <!-- Выбор цвета кожи -->
-                        <div class="ControlSection">
-                            <h4>Skin Color (Цвет кожи):</h4>
-                            <div class="ColorGrid" id="skinColors">
-                                <div class="ColorDot active" style="background-color: #fcd303;" onclick="changeColor('skin', '#fcd303', this)"></div>
-                                <div class="ColorDot" style="background-color: #ffb74d;" onclick="changeColor('skin', '#ffb74d', this)"></div>
-                                <div class="ColorDot" style="background-color: #90caf9;" onclick="changeColor('skin', '#90caf9', this)"></div>
-                                <div class="ColorDot" style="background-color: #a5d6a7;" onclick="changeColor('skin', '#a5d6a7', this)"></div>
-                                <div class="ColorDot" style="background-color: #eeeeee;" onclick="changeColor('skin', '#eeeeee', this)"></div>
-                            </div>
-                        </div>
-
-                        <!-- Выбор цвета одежды -->
-                        <div class="ControlSection">
-                            <h4>Torso & Arms (Цвет куртки/торса):</h4>
-                            <div class="ColorGrid" id="torsoColors">
-                                <div class="ColorDot active" style="background-color: #2d2d2d;" onclick="changeColor('torso', '#2d2d2d', this)"></div>
-                                <div class="ColorDot" style="background-color: #d02020;" onclick="changeColor('torso', '#d02020', this)"></div>
-                                <div class="ColorDot" style="background-color: #1565c0;" onclick="changeColor('torso', '#1565c0', this)"></div>
-                                <div class="ColorDot" style="background-color: #2e7d32;" onclick="changeColor('torso', '#2e7d32', this)"></div>
-                                <div class="ColorDot" style="background-color: #ff8f00;" onclick="changeColor('torso', '#ff8f00', this)"></div>
-                            </div>
-                        </div>
-
-                        <!-- Выбор цвета брюк -->
-                        <div class="ControlSection">
-                            <h4>Pants Color (Цвет брюк):</h4>
-                            <div class="ColorGrid" id="legColors">
-                                <div class="ColorDot active" style="background-color: #151515;" onclick="changeColor('legs', '#151515', this)"></div>
-                                <div class="ColorDot" style="background-color: #37474f;" onclick="changeColor('legs', '#37474f', this)"></div>
-                                <div class="ColorDot" style="background-color: #4e342e;" onclick="changeColor('legs', '#4e342e', this)"></div>
-                                <div class="ColorDot" style="background-color: #2e639e;" onclick="changeColor('legs', '#2e639e', this)"></div>
-                            </div>
-                        </div>
-
-                        <!-- Выбор аксессуаров -->
-                        <div class="ControlSection">
-                            <h4>Accessories (Аксессуары):</h4>
-                            <div class="ItemSelector">
-                                <button class="ItemBtn active" id="btnGlasses" onclick="toggleAccessory('glasses')">Purple Glasses (Очки)</button>
-                                <button class="ItemBtn" id="btnHat" onclick="toggleAccessory('hat')">Classic Hat (Шляпа)</button>
-                                <button class="ItemBtn active" id="btnPrint" onclick="toggleAccessory('print')">Vert-Logo (Логотип)</button>
-                            </div>
-                        </div>
-                    </div>
-
+            <h2>What is VERTBLOX?</h2>
+            <div class="FeatureRow">
+                <svg class="FeatureIcon" viewBox="0 0 48 48">
+                    <polygon points="24,2 44,12 24,22 4,12" fill="#8cb1e0" stroke="#002277" stroke-width="1.5"/>
+                    <polygon points="4,12 24,22 24,44 4,34" fill="#4c7bb8" stroke="#002277" stroke-width="1.5"/>
+                    <polygon points="24,22 44,12 44,34 24,44" fill="#6a95cc" stroke="#002277" stroke-width="1.5"/>
+                </svg>
+                <div class="FeatureText">
+                    <h3>Build with Virtual Bricks</h3>
+                    <p>Our sandbox features easy-to-use building blocks. Shape them into massive castles, futuristic starships, or competitive racing tracks.</p>
                 </div>
             </div>
-
         </div>
-
     </div>
 
-    <!-- Футер страницы -->
     <div id="Footer">
-        <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a> | <a href="#">Contact Us</a> | <a href="#">For Parents</a>
-        <br>
-        VERTBLOX © 2010 - 2026. This site is created for creative gaming.
-        
-        <div class="Disclaimer">
-            <strong>Disclaimer:</strong> Этот сайт является фанатской некоммерческой пародией и предназначен исключительно для демонстрации навыков веб-разработки. Мы никак не связаны с Roblox Corporation, не используем их оригинальные торговые марки в коммерческих целях. Все права на оригинальный дизайн принадлежат их законным правообладателям.
-        </div>
+        <a href="index.html">Terms of Service</a> | <a href="index.html">Privacy Policy</a> | <a href="https://github.com/ILLA4444F/vertblox" target="_blank">Contact Us</a>
+        <div class="Disclaimer">VERTBLOX © 2010 - 2026. This site is created for creative gaming.</div>
     </div>
-
 </div>
-
-<!-- Скрипт кастомизации -->
-<script>
-    // Функция смены цвета частей тела
-    function changeColor(type, colorValue, element) {
-        // Убираем активный класс у кнопок данной категории
-        const parent = element.parentElement;
-        const dots = parent.getElementsByClassName('ColorDot');
-        for (let dot of dots) {
-            dot.classList.remove('active');
-        }
-        element.classList.add('active');
-
-        // Применяем цвета к SVG-элементам
-        if (type === 'skin') {
-            document.getElementById('partHead').setAttribute('fill', colorValue);
-            document.getElementById('partNeck').setAttribute('fill', colorValue);
-            document.getElementById('partHandL').setAttribute('fill', colorValue);
-            document.getElementById('partHandR').setAttribute('fill', colorValue);
-        } else if (type === 'torso') {
-            document.getElementById('partTorso').setAttribute('fill', colorValue);
-            document.getElementById('partArmL').setAttribute('fill', colorValue);
-            document.getElementById('partArmR').setAttribute('fill', colorValue);
-        } else if (type === 'legs') {
-            document.getElementById('partLegL').setAttribute('fill', colorValue);
-            document.getElementById('partLegR').setAttribute('fill', colorValue);
-        }
-    }
-
-    // Функция включения/выключения аксессуаров
-    function toggleAccessory(accessoryType) {
-        if (accessoryType === 'glasses') {
-            const glasses = document.getElementById('glasses');
-            const btn = document.getElementById('btnGlasses');
-            if (glasses.style.display === 'none') {
-                glasses.style.display = 'block';
-                btn.classList.add('active');
-            } else {
-                glasses.style.display = 'none';
-                btn.classList.remove('active');
-            }
-        } else if (accessoryType === 'hat') {
-            const hat = document.getElementById('classicHat');
-            const btn = document.getElementById('btnHat');
-            if (hat.style.display === 'none') {
-                hat.style.display = 'block';
-                btn.classList.add('active');
-            } else {
-                hat.style.display = 'none';
-                btn.classList.remove('active');
-            }
-        } else if (accessoryType === 'print') {
-            const print = document.getElementById('torsoPrint');
-            const btn = document.getElementById('btnPrint');
-            if (print.style.display === 'none') {
-                print.style.display = 'block';
-                btn.classList.add('active');
-            } else {
-                print.style.display = 'none';
-                btn.classList.remove('active');
-            }
-        }
-    }
-</script>
 
 </body>
 </html>
