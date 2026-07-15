@@ -2,63 +2,62 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VERTBLOX: Games</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .GamesGrid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
         .GameCard {
             border: 1px solid #7795bd;
-            background-color: #f6f9fc;
-            padding: 10px;
-            text-align: center;
-            border-radius: 4px;
+            background-color: #e2ebf5;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
-        .GameThumbnail {
-            width: 100%;
-            height: 110px;
-            background-color: #d0e1f4;
+        .GameThumb {
+            width: 120px;
+            height: 90px;
+            background-color: #000;
+            border: 2px solid #002277;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #7795bd;
-            margin-bottom: 8px;
+            color: white;
             font-weight: bold;
-            color: #002277;
+            font-size: 14px;
+            text-align: center;
+        }
+        .GameInfo {
+            flex-grow: 1;
         }
         .GameTitle {
-            font-size: 13px;
+            font-size: 16px;
             font-weight: bold;
             color: #0055c5;
             text-decoration: none;
-            display: block;
-            margin-bottom: 5px;
         }
-        .GameTitle:hover { text-decoration: underline; }
-        .GameCreator { font-size: 10px; color: #666; margin-bottom: 8px; }
-        .PlaySmallBtn {
+        .GameTitle:hover {
+            text-decoration: underline;
+        }
+        .PlayBtn {
             background: #ff9900 linear-gradient(to bottom, #ffb84d, #e68a00);
             border: 1px solid #cc7a00;
             color: white !important;
-            padding: 5px 20px;
+            padding: 8px 20px;
             font-weight: bold;
-            font-size: 12px;
-            cursor: pointer;
-            border-radius: 3px;
             text-decoration: none;
-            display: inline-block;
+            font-size: 14px;
+            box-shadow: 0 2px 0 #cc7a00;
+            border-radius: 3px;
         }
-        .PlaySmallBtn:hover {
-            background: #e68a00;
+        .PlayBtn:active {
+            transform: translateY(1px);
+            box-shadow: none;
         }
     </style>
 </head>
 <body>
-
 <div id="Container">
     <div id="Header">
         <a href="index.html" class="LogoContainer"><span class="LogoText">VERTBLOX</span></a>
@@ -77,56 +76,36 @@
     </div>
 
     <div id="MainBody">
-        <div id="LeftColumn">
-            <div class="WidgetBox">
-                <h3>Filter Games</h3>
-                <div style="font-size: 11px; line-height: 1.8;">
-                    • <a href="#" style="color: #0055c5; text-decoration: none; font-weight: bold;">Most Popular</a><br>
-                    • <a href="#" style="color: #555; text-decoration: none;">Recently Updated</a><br>
-                    • <a href="#" style="color: #555; text-decoration: none;">My Favorites</a>
-                </div>
-            </div>
-        </div>
-
-        <div id="RightColumn">
-            <h2>Public Games</h2>
-            <p>Explore virtual spaces built by VERTBLOX community creators.</p>
+        <div id="RightColumn" style="width: 100%;">
+            <h2>User Created Games</h2>
             
-            <div class="GamesGrid">
-                
-                <div class="GameCard">
-                    <div class="GameThumbnail">CROSSROADS</div>
-                    <a href="play.html?place=Classic%20Crossroads" class="GameTitle">Classic Crossroads</a>
-                    <div class="GameCreator">by VERTBLOX</div>
-                    <div style="font-size: 10px; color: #006600; margin-bottom: 8px;">Active: 128 players</div>
-                    <a href="play.html?place=Classic%20Crossroads" class="PlaySmallBtn">PLAY</a>
+            <div class="GameCard">
+                <div class="GameThumb" style="background: linear-gradient(45deg, #112233, #3e2723); color: #ff4081;">3D CASTLE</div>
+                <div class="GameInfo">
+                    <a href="castle.html" class="GameTitle">Castle Defense 3D</a>
+                    <p style="margin: 5px 0; font-size: 11px; color: #555;">Спаси принцессу в 3D! Отбивайся от наступающих зомби лазерами. Теперь они охотятся лично за тобой!</p>
+                    <span style="font-size: 10px; color: #777;">Creator: <b>4444_F</b></span>
                 </div>
-
-                <div class="GameCard">
-                    <div class="GameThumbnail" style="background-color: #dfd0f4;">CHAOS CANYON</div>
-                    <a href="play.html?place=Chaos%20Canyon" class="GameTitle">Chaos Canyon</a>
-                    <div class="GameCreator">by VERTBLOX</div>
-                    <div style="font-size: 10px; color: #006600; margin-bottom: 8px;">Active: 64 players</div>
-                    <a href="play.html?place=Chaos%20Canyon" class="PlaySmallBtn">PLAY</a>
-                </div>
-
-                <div class="GameCard">
-                    <div class="GameThumbnail" style="background-color: #f4d0d0;">BASEPLATE</div>
-                    <a href="play.html?place=Empty%20Baseplate" class="GameTitle">Empty Baseplate</a>
-                    <div class="GameCreator">by 4444_F</div>
-                    <div style="font-size: 10px; color: #666; margin-bottom: 8px;">Active: 0 players</div>
-                    <a href="play.html?place=Empty%20Baseplate" class="PlaySmallBtn">PLAY</a>
-                </div>
-
+                <a href="castle.html" class="PlayBtn">PLAY</a>
             </div>
+
+            <div class="GameCard">
+                <div class="GameThumb" style="background: linear-gradient(45deg, #0055c5, #a1887f); color: #ffd700;">DOMESTOS</div>
+                <div class="GameInfo">
+                    <a href="angry.html" class="GameTitle">Domestos Birds</a>
+                    <p style="margin: 5px 0; font-size: 11px; color: #555;">Запускай дезинфицирующий Доместос из рогатки, чтобы уничтожить коварные какашки на блоках!</p>
+                    <span style="font-size: 10px; color: #777;">Creator: <b>4444_F</b></span>
+                </div>
+                <a href="angry.html" class="PlayBtn">PLAY</a>
+            </div>
+
         </div>
     </div>
 
     <div id="Footer">
         <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a>
-        <div class="Disclaimer">VERTBLOX © 2010 - 2026. This site is created for creative gaming.</div>
+        <div class="Disclaimer">VERTBLOX © 2010 - 2026.</div>
     </div>
 </div>
-
 </body>
 </html>
