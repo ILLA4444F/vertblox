@@ -2,22 +2,42 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>VERTBLOX: Customize Character</title>
+    <title>VERTBLOX: Free Virtual Sandbox & Building Game</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .CustomizerBox { border: 1px solid #7795bd; background-color: #f6f9fc; padding: 15px; }
-        .CustomizerHeader { font-size: 16px; font-weight: bold; color: #002277; margin-bottom: 12px; border-bottom: 1px solid #7795bd; padding-bottom: 5px; }
-        .CustomizerLayout { display: flex; gap: 20px; }
-        .AvatarBox { background-color: #ffffff; border: 1px solid #7795bd; padding: 8px; width: 150px; text-align: center; }
-        .ControlsPanel { flex-grow: 1; }
-        .ControlSection { margin-bottom: 15px; }
-        .ControlSection h4 { margin: 0 0 8px 0; color: #002277; }
-        .ColorGrid { display: flex; gap: 6px; flex-wrap: wrap; }
-        .ColorDot { width: 24px; height: 24px; border: 1px solid #7795bd; cursor: pointer; border-radius: 3px; }
-        .ColorDot.active { border: 2px solid #000; }
-        .ItemSelector { display: flex; gap: 10px; }
-        .ItemBtn { background: #e1ebf5 linear-gradient(to bottom, #ffffff, #cedbe8); border: 1px solid #7795bd; color: #002277; padding: 5px 12px; font-weight: bold; cursor: pointer; }
-        .ItemBtn.active { background: #2e639e linear-gradient(to bottom, #538cc6, #2e639e); color: #fff; }
+        .HeroBanner {
+            background: #e1ebf4 url('https://web.archive.org/web/20100528145241im_/http://www.roblox.com/images/Template/sub_background.gif') repeat-x top center;
+            border: 1px solid #7795bd;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .HeroText h1 { font-size: 26px; margin: 0 0 5px 0; color: #002277; }
+        .HeroText h2 { font-size: 16px; color: #d02020; margin: 0 0 15px 0; }
+        .PlayButton {
+            background: #ff9900 linear-gradient(to bottom, #ffb84d, #e68a00);
+            border: 1px solid #cc7a00;
+            color: white !important;
+            padding: 10px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 1px 1px 1px #995c00;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 4px;
+        }
+        .FeatureRow {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            border-bottom: 1px dashed #7795bd;
+            padding-bottom: 15px;
+            margin-top: 15px;
+        }
+        .FeatureIcon { width: 48px; height: 48px; flex-shrink: 0; }
+        .FeatureText h3 { font-size: 14px; margin: 0 0 4px 0; color: #002277; }
     </style>
 </head>
 <body>
@@ -32,9 +52,9 @@
     </div>
 
     <div id="NavigationBar">
-        <a href="index.html">Home</a>
+        <a href="index.html" class="active">Home</a>
         <a href="games.html">Games</a>
-        <a href="avatar.html" class="active">Avatar</a>
+        <a href="avatar.html">Avatar</a>
         <a href="#">Catalog</a>
         <a href="#">Forum</a>
     </div>
@@ -42,134 +62,52 @@
     <div id="MainBody">
         <div id="LeftColumn">
             <div class="WidgetBox">
-                <h3>Avatar Settings</h3>
-                <p style="font-size: 11px;">Change your colors and hats to look unique in VERTBLOX worlds!</p>
+                <h3>My Account</h3>
+                <div style="font-size: 11px; line-height: 1.5;">
+                    <strong>Tickets:</strong> <span style="color: #006600;">124 Tix</span><br>
+                    <strong>VertBucks:</strong> <span style="color: #b30000;">10 VB</span><br>
+                    <strong>Rank:</strong> Member
+                </div>
+            </div>
+            <div class="WidgetBox">
+                <h3>Site Statistics</h3>
+                <div style="font-size: 11px; line-height: 1.5; color: #555;">
+                    Users Online: <strong>3,402</strong><br>
+                    Active Servers: <strong>412</strong>
+                </div>
             </div>
         </div>
 
         <div id="RightColumn">
-            <div class="CustomizerBox">
-                <div class="CustomizerHeader">Character Customizer</div>
-                <div class="CustomizerLayout">
-                    
-                    <div class="AvatarBox">
-                        <svg width="130" height="160" viewBox="0 0 120 150" id="avatarSvg">
-                            <defs>
-                                <radialGradient id="avatarBg" cx="50%" cy="50%" r="50%">
-                                    <stop offset="0%" stop-color="#ffffff"/>
-                                    <stop offset="100%" stop-color="#e2ebf5"/>
-                                </radialGradient>
-                            </defs>
-                            <rect width="120" height="150" fill="url(#avatarBg)" rx="3"/>
-                            <rect id="partLegL" x="35" y="105" width="22" height="38" fill="#151515" stroke="#000" stroke-width="1.2"/>
-                            <rect id="partLegR" x="63" y="105" width="22" height="38" fill="#151515" stroke="#000" stroke-width="1.2"/>
-                            <rect id="partTorso" x="35" y="55" width="50" height="50" fill="#2d2d2d" stroke="#000" stroke-width="1.2"/>
-                            <g id="torsoPrint">
-                                <polygon points="50,58 70,58 60,68" fill="#fcd303"/>
-                                <rect x="58" y="68" width="4" height="37" fill="#fcd303"/>
-                            </g>
-                            <rect id="partArmL" x="11" y="55" width="22" height="45" fill="#2d2d2d" stroke="#000" stroke-width="1.2"/>
-                            <rect id="partHandL" x="11" y="94" width="22" height="6" fill="#fcd303"/>
-                            <rect id="partArmR" x="87" y="55" width="22" height="45" fill="#2d2d2d" stroke="#000" stroke-width="1.2"/>
-                            <rect id="partHandR" x="87" y="94" width="22" height="6" fill="#fcd303"/>
-                            <rect id="partNeck" x="53" y="49" width="14" height="6" fill="#fcd303" stroke="#000" stroke-width="1.2"/>
-                            <rect id="partHead" x="45" y="23" width="30" height="26" fill="#fcd303" rx="3" stroke="#000" stroke-width="1.2"/>
-                            
-                            <g id="glasses" style="display: block;">
-                                <rect x="49" y="29" width="10" height="5" fill="#5e35b1" stroke="#000" stroke-width="0.8"/>
-                                <rect x="61" y="29" width="10" height="5" fill="#5e35b1" stroke="#000" stroke-width="0.8"/>
-                                <line x1="59" y1="31" x2="61" y2="31" stroke="#000" stroke-width="1"/>
-                            </g>
-                            <g id="classicHat" style="display: none;">
-                                <ellipse cx="60" cy="22" rx="22" ry="4" fill="#d02020" stroke="#000" stroke-width="1"/>
-                                <rect x="48" y="10" width="24" height="12" fill="#d02020" stroke="#000" stroke-width="1"/>
-                                <rect x="48" y="18" width="24" height="2" fill="#fff"/>
-                            </g>
-                            <path d="M54,39 Q60,43 66,39" fill="none" stroke="#000" stroke-width="1.5"/>
-                        </svg>
-                        <div style="font-size: 11px; font-weight: bold; color: #002277; margin-top: 5px;">4444_F</div>
-                    </div>
+            <div class="HeroBanner">
+                <div class="HeroText">
+                    <h1>VERTBLOX Virtual World</h1>
+                    <h2>VERTBLOX is Free!</h2>
+                    <p>Build your own games, explore vast user-created worlds, and play with thousands of other players online in a completely safe block environment.</p>
+                    <a href="games.html" class="PlayButton">Browse Games</a>
+                </div>
+            </div>
 
-                    <div class="ControlsPanel">
-                        <div class="ControlSection">
-                            <h4>Skin Color:</h4>
-                            <div class="ColorGrid">
-                                <div class="ColorDot active" style="background-color: #fcd303;" onclick="changeColor('skin', '#fcd303', this)"></div>
-                                <div class="ColorDot" style="background-color: #ffb74d;" onclick="changeColor('skin', '#ffb74d', this)"></div>
-                                <div class="ColorDot" style="background-color: #90caf9;" onclick="changeColor('skin', '#90caf9', this)"></div>
-                                <div class="ColorDot" style="background-color: #eeeeee;" onclick="changeColor('skin', '#eeeeee', this)"></div>
-                            </div>
-                        </div>
-                        <div class="ControlSection">
-                            <h4>Torso & Arms:</h4>
-                            <div class="ColorGrid">
-                                <div class="ColorDot active" style="background-color: #2d2d2d;" onclick="changeColor('torso', '#2d2d2d', this)"></div>
-                                <div class="ColorDot" style="background-color: #d02020;" onclick="changeColor('torso', '#d02020', this)"></div>
-                                <div class="ColorDot" style="background-color: #1565c0;" onclick="changeColor('torso', '#1565c0', this)"></div>
-                            </div>
-                        </div>
-                        <div class="ControlSection">
-                            <h4>Pants Color:</h4>
-                            <div class="ColorGrid">
-                                <div class="ColorDot active" style="background-color: #151515;" onclick="changeColor('legs', '#151515', this)"></div>
-                                <div class="ColorDot" style="background-color: #37474f;" onclick="changeColor('legs', '#37474f', this)"></div>
-                                <div class="ColorDot" style="background-color: #2e639e;" onclick="changeColor('legs', '#2e639e', this)"></div>
-                            </div>
-                        </div>
-                        <div class="ControlSection">
-                            <h4>Accessories:</h4>
-                            <div class="ItemSelector">
-                                <button class="ItemBtn active" id="btnGlasses" onclick="toggleAccessory('glasses')">Purple Glasses</button>
-                                <button class="ItemBtn" id="btnHat" onclick="toggleAccessory('hat')">Classic Hat</button>
-                            </div>
-                        </div>
-                    </div>
-
+            <h2>What is VERTBLOX?</h2>
+            <div class="FeatureRow">
+                <svg class="FeatureIcon" viewBox="0 0 48 48">
+                    <polygon points="24,2 44,12 24,22 4,12" fill="#8cb1e0" stroke="#002277" stroke-width="1.5"/>
+                    <polygon points="4,12 24,22 24,44 4,34" fill="#4c7bb8" stroke="#002277" stroke-width="1.5"/>
+                    <polygon points="24,22 44,12 44,34 24,44" fill="#6a95cc" stroke="#002277" stroke-width="1.5"/>
+                </svg>
+                <div class="FeatureText">
+                    <h3>Build with Virtual Bricks</h3>
+                    <p>Our sandbox features easy-to-use building blocks. Shape them into massive castles, futuristic starships, or competitive racing tracks.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="Footer">
-        <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a> | <a href="#">Contact Us</a>
         <div class="Disclaimer">VERTBLOX © 2010 - 2026. This site is created for creative gaming.</div>
     </div>
 </div>
 
-<script>
-    function changeColor(type, colorValue, element) {
-        const dots = element.parentElement.getElementsByClassName('ColorDot');
-        for (let dot of dots) dot.classList.remove('active');
-        element.classList.add('active');
-
-        if (type === 'skin') {
-            document.getElementById('partHead').setAttribute('fill', colorValue);
-            document.getElementById('partNeck').setAttribute('fill', colorValue);
-            document.getElementById('partHandL').setAttribute('fill', colorValue);
-            document.getElementById('partHandR').setAttribute('fill', colorValue);
-        } else if (type === 'torso') {
-            document.getElementById('partTorso').setAttribute('fill', colorValue);
-            document.getElementById('partArmL').setAttribute('fill', colorValue);
-            document.getElementById('partArmR').setAttribute('fill', colorValue);
-        } else if (type === 'legs') {
-            document.getElementById('partLegL').setAttribute('fill', colorValue);
-            document.getElementById('partLegR').setAttribute('fill', colorValue);
-        }
-    }
-
-    function toggleAccessory(accessoryType) {
-        if (accessoryType === 'glasses') {
-            const glasses = document.getElementById('glasses');
-            const btn = document.getElementById('btnGlasses');
-            glasses.style.display = glasses.style.display === 'none' ? 'block' : 'none';
-            btn.classList.toggle('active');
-        } else if (accessoryType === 'hat') {
-            const hat = document.getElementById('classicHat');
-            const btn = document.getElementById('btnHat');
-            hat.style.display = hat.style.display === 'none' ? 'block' : 'none';
-            btn.classList.toggle('active');
-        }
-    }
-</script>
 </body>
 </html>
