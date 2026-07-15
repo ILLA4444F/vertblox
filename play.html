@@ -2,13 +2,14 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VERTBLOX: Player</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .GameContainerBox {
             border: 1px solid #7795bd;
             background-color: #f6f9fc;
-            padding: 15px;
+            padding: 10px;
             text-align: center;
         }
         .GameHeader {
@@ -22,35 +23,92 @@
             font-size: 11px;
             color: #555;
             text-align: left;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border-bottom: 1px solid #7795bd;
             padding-bottom: 5px;
         }
-        /* Игровое поле */
+        
+        /* Адаптивный холст игры */
+        .CanvasWrapper {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
         canvas {
-            background-color: #a5cbf5; /* Цвет неба */
+            background-color: #a5cbf5;
             border: 3px solid #002277;
             display: block;
-            margin: 0 auto;
+            width: 100%; /* Растягивается по ширине экрана */
+            height: auto; /* Сохраняет пропорции */
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-sizing: border-box;
         }
+
         .ControlsHelp {
             margin-top: 10px;
-            font-size: 12px;
+            font-size: 11px;
             color: #333;
             background-color: #fff;
-            padding: 8px;
+            padding: 6px;
             border: 1px dashed #7795bd;
             display: inline-block;
             border-radius: 4px;
         }
+
+        /* Виртуальный джойстик для телефонов и планшетов */
+        .MobileControls {
+            display: none; /* По умолчанию скрыт на ПК */
+            justify-content: space-between;
+            max-width: 600px;
+            margin: 15px auto 0 auto;
+            padding: 0 10px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .DirButtons {
+            display: flex;
+            gap: 10px;
+        }
+        .TouchBtn {
+            width: 60px;
+            height: 60px;
+            background: #2e639e linear-gradient(to bottom, #538cc6, #2e639e);
+            border: 2px solid #002277;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px #002277;
+            cursor: pointer;
+            touch-action: manipulation; /* Убирает задержку клика на смартфонах */
+        }
+        .TouchBtn:active {
+            box-shadow: 0 1px #002277;
+            transform: translateY(3px);
+            background: #1e4675;
+        }
+
+        /* Показываем кнопки управления только на мобилках и планшетах */
+        @media (max-width: 768px) {
+            .MobileControls {
+                display: flex;
+            }
+            .ControlsHelp {
+                display: none; /* Скрываем подсказку клавиатуры */
+            }
+        }
+
         .BackBtn {
             margin-top: 15px;
             display: inline-block;
             background: #e1ebf5 linear-gradient(to bottom, #ffffff, #cedbe8);
             border: 1px solid #7795bd;
             color: #002277;
-            padding: 5px 15px;
+            padding: 6px 15px;
             font-weight: bold;
             text-decoration: none;
             font-size: 11px;
@@ -80,26 +138,25 @@
     </div>
 
     <div id="MainBody">
-        <div id="LeftColumn">
-            <div class="WidgetBox">
-                <h3>Place Info</h3>
-                <div style="font-size: 11px; line-height: 1.5;">
-                    <strong>Visits:</strong> 1,204<br>
-                    <strong>Created:</strong> 2010<br>
-                    <strong>Max Players:</strong> 12
-                </div>
-            </div>
-        </div>
-
-        <div id="RightColumn">
+        <div id="RightColumn" style="width: 100%;">
             <div class="GameContainerBox">
                 <div class="GameHeader" id="gameTitle">Classic Crossroads</div>
                 <div class="GameCreatorSub">Creator: <strong style="color: #0055c5;">VERTBLOX</strong></div>
                 
-                <canvas id="gameCanvas" width="600" height="350"></canvas>
+                <div class="CanvasWrapper">
+                    <canvas id="gameCanvas" width="600" height="350"></canvas>
+                </div>
+
+                <div class="MobileControls">
+                    <div class="DirButtons">
+                        <div class="TouchBtn" id="btnLeft">←</div>
+                        <div class="TouchBtn" id="btnRight">→</div>
+                    </div>
+                    <div class="TouchBtn" id="btnJump" style="background: #ff9900 linear-gradient(to bottom, #ffb84d, #e68a00); border-color: #cc7a00; box-shadow: 0 4px #cc7a00;">▲</div>
+                </div>
                 
                 <div class="ControlsHelp">
-                    <strong>Управление:</strong> Стрелочки влево/вправо (или <b>A / D</b>) — движение. Стрелочка вверх (или <b>W / Space</b>) — прыжок.
+                    <strong>Клавиатура:</strong> Стрелочки / A, D — движение. Пробел / W — прыжок.
                 </div>
                 <br>
                 <a href="games.html" class="BackBtn">← Вернуться к списку игр</a>
@@ -114,7 +171,6 @@
 </div>
 
 <script>
-    // Получаем параметры из URL (какую игру запустить)
     const urlParams = new URLSearchParams(window.location.search);
     const placeName = urlParams.get('place') || 'Classic Crossroads';
     document.getElementById('gameTitle').innerText = placeName;
@@ -130,10 +186,9 @@
         height: 38,
         vx: 0,
         vy: 0,
-        speed: 3.5,
-        jumpForce: 8,
+        speed: 4,
+        jumpForce: 8.5,
         grounded: false,
-        // Цвета по умолчанию (как у аватара)
         colors: {
             skin: '#fcd303',
             torso: '#2d2d2d',
@@ -141,57 +196,83 @@
         }
     };
 
-    // Гравитация и окружение
-    const gravity = 0.35;
+    const gravity = 0.38;
     const platforms = [
-        { x: 0, y: 310, width: 600, height: 40, color: '#4caf50' },   // Земля (зеленая трава)
-        { x: 150, y: 240, width: 120, height: 15, color: '#e0e0e0' }, // Платформы серого кирпича
-        { x: 350, y: 180, width: 120, height: 15, color: '#e0e0e0' },
-        { x: 100, y: 130, width: 100, height: 15, color: '#e0e0e0' }
+        { x: 0, y: 310, width: 600, height: 40, color: '#4caf50' },   
+        { x: 150, y: 230, width: 120, height: 15, color: '#e0e0e0' }, 
+        { x: 350, y: 170, width: 120, height: 15, color: '#e0e0e0' },
+        { x: 100, y: 120, width: 100, height: 15, color: '#e0e0e0' }
     ];
 
-    // Монетки / Желтые блоки для сбора
     let coins = [
-        { x: 200, y: 210, radius: 6, collected: false },
-        { x: 410, y: 150, radius: 6, collected: false },
-        { x: 140, y: 100, radius: 6, collected: false }
+        { x: 200, y: 200, radius: 6, collected: false },
+        { x: 410, y: 140, radius: 6, collected: false },
+        { x: 140, y: 90, radius: 6, collected: false }
     ];
 
     let score = 0;
 
-    // Считывание управления
+    // Ввод: клавиатура + сенсор
     const keys = {};
+    const input = { left: false, right: false, jump: false };
+
+    // Слушатели клавиатуры
     window.addEventListener('keydown', e => { keys[e.key] = true; });
     window.addEventListener('keyup', e => { keys[e.key] = false; });
 
+    // Настройка тач-событий для мобилок (чтобы предотвратить залипания и зум экрана)
+    function setupTouchButton(elementId, action) {
+        const btn = document.getElementById(elementId);
+        
+        const startAction = (e) => {
+            e.preventDefault();
+            input[action] = true;
+        };
+        const endAction = (e) => {
+            e.preventDefault();
+            input[action] = false;
+        };
+
+        btn.addEventListener('touchstart', startAction, { passive: false });
+        btn.addEventListener('touchend', endAction, { passive: false });
+        btn.addEventListener('touchcancel', endAction, { passive: false });
+        
+        // Дублирование для мышки (чтобы кликать на ПК кнопками тоже можно было)
+        btn.addEventListener('mousedown', () => { input[action] = true; });
+        btn.addEventListener('mouseup', () => { input[action] = false; });
+        btn.addEventListener('mouseleave', () => { input[action] = false; });
+    }
+
+    setupTouchButton('btnLeft', 'left');
+    setupTouchButton('btnRight', 'right');
+    setupTouchButton('btnJump', 'jump');
+
     function update() {
-        // Движение по горизонтали
-        if (keys['ArrowRight'] || keys['d'] || keys['D'] || keys['в'] || keys['В']) {
+        // Объединяем ввод с клавиатуры и сенсора
+        const moveRight = keys['ArrowRight'] || keys['d'] || keys['D'] || keys['в'] || keys['В'] || input.right;
+        const moveLeft = keys['ArrowLeft'] || keys['a'] || keys['A'] || keys['ф'] || keys['Ф'] || input.left;
+        const doJump = keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' '] || keys['ц'] || keys['Ц'] || input.jump;
+
+        if (moveRight) {
             player.vx = player.speed;
-        } else if (keys['ArrowLeft'] || keys['a'] || keys['A'] || keys['ф'] || keys['Ф']) {
+        } else if (moveLeft) {
             player.vx = -player.speed;
         } else {
             player.vx = 0;
         }
 
-        // Прыжок
-        if ((keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' '] || keys['ц'] || keys['Ц']) && player.grounded) {
+        if (doJump && player.grounded) {
             player.vy = -player.jumpForce;
             player.grounded = false;
         }
 
-        // Применение гравитации
         player.vy += gravity;
-
-        // Обновление координат
         player.x += player.vx;
         player.y += player.vy;
 
-        // Границы экрана по бокам
         if (player.x < 0) player.x = 0;
         if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
 
-        // Проверка столкновений с платформами
         player.grounded = false;
         for (let plat of platforms) {
             if (player.x < plat.x + plat.width &&
@@ -205,7 +286,6 @@
             }
         }
 
-        // Сбор монеток
         for (let coin of coins) {
             if (!coin.collected) {
                 let pCenterX = player.x + player.width / 2;
@@ -222,23 +302,22 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Рисуем небо и солнце
+        // Солнце
         ctx.fillStyle = '#ffeb3b';
         ctx.beginPath();
         ctx.arc(520, 50, 25, 0, Math.PI * 2);
         ctx.fill();
 
-        // 2. Рисуем платформы
+        // Платформы
         for (let plat of platforms) {
             ctx.fillStyle = plat.color;
             ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-            // Черная обводка блоков
-            ctx.strokeStyle = '#333';
+            ctx.strokeStyle = '#002277';
             ctx.lineWidth = 1.5;
             ctx.strokeRect(plat.x, plat.y, plat.width, plat.height);
         }
 
-        // 3. Рисуем монетки (желтые классические детальки)
+        // Монетки
         for (let coin of coins) {
             if (!coin.collected) {
                 ctx.fillStyle = '#fcd303';
@@ -251,8 +330,7 @@
             }
         }
 
-        // 4. Рисуем блочного игрока
-        // Ноги
+        // Отрисовка скина
         ctx.fillStyle = player.colors.legs;
         ctx.fillRect(player.x + 2, player.y + 26, 9, 12);
         ctx.fillRect(player.x + 13, player.y + 26, 9, 12);
@@ -260,17 +338,14 @@
         ctx.strokeRect(player.x + 2, player.y + 26, 9, 12);
         ctx.strokeRect(player.x + 13, player.y + 26, 9, 12);
 
-        // Торс
         ctx.fillStyle = player.colors.torso;
         ctx.fillRect(player.x + 2, player.y + 12, 20, 14);
         ctx.strokeRect(player.x + 2, player.y + 12, 20, 14);
 
-        // Голова
         ctx.fillStyle = player.colors.skin;
         ctx.fillRect(player.x + 6, player.y, 12, 12);
         ctx.strokeRect(player.x + 6, player.y, 12, 12);
 
-        // Лицо (глаза и улыбка)
         ctx.fillStyle = '#000';
         ctx.fillRect(player.x + 8, player.y + 3, 2, 2);
         ctx.fillRect(player.x + 14, player.y + 3, 2, 2);
@@ -278,7 +353,7 @@
         ctx.arc(player.x + 12, player.y + 8, 3, 0, Math.PI, false);
         ctx.stroke();
 
-        // 5. Очки (Интерфейс)
+        // Счёт
         ctx.fillStyle = '#002277';
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'left';
