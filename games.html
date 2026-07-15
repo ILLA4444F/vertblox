@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>VERTBLOX: Games</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .GamesGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .GameCard {
+            border: 1px solid #7795bd;
+            background-color: #f6f9fc;
+            padding: 10px;
+            text-align: center;
+            border-radius: 4px;
+        }
+        .GameThumbnail {
+            width: 100%;
+            height: 110px;
+            background-color: #d0e1f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #7795bd;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #002277;
+        }
+        .GameTitle {
+            font-size: 13px;
+            font-weight: bold;
+            color: #0055c5;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .GameTitle:hover { text-decoration: underline; }
+        .GameCreator { font-size: 10px; color: #666; margin-bottom: 8px; }
+        .PlaySmallBtn {
+            background: #ff9900 linear-gradient(to bottom, #ffb84d, #e68a00);
+            border: 1px solid #cc7a00;
+            color: white;
+            padding: 3px 15px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 3px;
+            text-decoration: none;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div id="Container">
+    <div id="Header">
+        <a href="index.html" class="LogoContainer"><span class="LogoText">VERTBLOX</span></a>
+        <div class="AuthStatus">
+            Logged in as: <a href="avatar.html" style="font-weight: bold;">4444_F</a><br>
+            <a href="avatar.html">My Character</a> | <a href="#">Logout</a>
+        </div>
+    </div>
+
+    <div id="NavigationBar">
+        <a href="index.html">Home</a>
+        <a href="games.html" class="active">Games</a>
+        <a href="avatar.html">Avatar</a>
+        <a href="#">Catalog</a>
+        <a href="#">Forum</a>
+    </div>
+
+    <div id="MainBody">
+        <div id="LeftColumn">
+            <div class="WidgetBox">
+                <h3>Filter Games</h3>
+                <div style="font-size: 11px; line-height: 1.8;">
+                    • <a href="#" style="color: #0055c5; text-decoration: none; font-weight: bold;">Most Popular</a><br>
+                    • <a href="#" style="color: #555; text-decoration: none;">Recently Updated</a><br>
+                    • <a href="#" style="color: #555; text-decoration: none;">My Favorites</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="RightColumn">
+            <h2>Public Games</h2>
+            <p>Explore virtual spaces built by VERTBLOX community creators.</p>
+            
+            <div class="GamesGrid">
+                
+                <!-- Плейс 1 -->
+                <div class="GameCard">
+                    <div class="GameThumbnail">CROSSROADS</div>
+                    <a href="#" class="GameTitle">Classic Crossroads</a>
+                    <div class="GameCreator">by VERTBLOX</div>
+                    <div style="font-size: 10px; color: #006600; margin-bottom: 8px;">Active: 128 players</div>
+                    <a href="#" class="PlaySmallBtn" onclick="alert('Launching Place: Crossroads...');">PLAY</a>
+                </div>
+
+                <!-- Плейс 2 -->
+                <div class="GameCard">
+                    <div class="GameThumbnail" style="background-color: #dfd0f4;">CHAOS CANYON</div>
+                    <a href="#" class="GameTitle">Chaos Canyon</a>
+                    <div class="GameCreator">by VERTBLOX</div>
+                    <div style="font-size: 10px; color: #006600; margin-bottom: 8px;">Active: 64 players</div>
+                    <a href="#" class="PlaySmallBtn" onclick="alert('Launching Place: Chaos Canyon...');">PLAY</a>
+                </div>
+
+                <!-- Плейс 3 -->
+                <div class="GameCard">
+                    <div class="GameThumbnail" style="background-color: #f4d0d0;">BASEPLATE</div>
+                    <a href="#" class="GameTitle">Empty Baseplate</a>
+                    <div class="GameCreator">by 4444_F</div>
+                    <div style="font-size: 10px; color: #666; margin-bottom: 8px;">Active: 0 players</div>
+                    <a href="#" class="PlaySmallBtn" onclick="alert('Launching Place: Baseplate...');">PLAY</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="Footer">
+        <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a>
+        <div class="Disclaimer">VERTBLOX © 2010 - 2026. This site is created for creative gaming.</div>
+    </div>
+</div>
+
+</body>
+</html>
