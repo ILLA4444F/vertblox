@@ -136,14 +136,14 @@
     <div id="MainBody">
         <div id="RightColumn" style="width: 100%;">
             <div class="GameContainerBox">
-                <div class="GameHeader">Castle Defense: Save the Princess!</div>
+                <div class="GameHeader" id="gameTitle">Castle Defense: Save the Princess!</div>
                 <div class="GameCreatorSub">Creator: <strong style="color: #0055c5;">4444_F</strong></div>
                 
                 <div class="CanvasWrapper">
                     <canvas id="gameCanvas" width="600" height="350"></canvas>
                 </div>
 
-                <div class="MobileControls">
+                <div class="MobileControls" id="mobileControlsContainer">
                     <div class="DirButtons">
                         <div class="TouchBtn" id="btnLeft">←</div>
                         <div class="TouchBtn" id="btnRight">→</div>
@@ -168,270 +168,289 @@
 </div>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-
-    // Настройки игрока
-    const player = {
-        x: 280,
-        y: 200,
-        width: 22,
-        height: 38,
-        vx: 0,
-        vy: 0,
-        speed: 4,
-        jumpForce: 8.5,
-        grounded: false,
-        colors: {
-            skin: '#fcd303',
-            torso: '#d02020', // Красный торс защитника
-            legs: '#1565c0'   // Синие джинсы
-        }
-    };
-
-    const gravity = 0.38;
-
-    // Платформы нашего замка
-    const platforms = [
-        // Земля
-        { x: 0, y: 310, width: 600, height: 40, color: '#3e2723' }, 
-        // Башни и барьеры замка
-        { x: 200, y: 240, width: 200, height: 80, color: '#78909c' },  // Главный замок посередине
-        { x: 230, y: 160, width: 140, height: 20, color: '#546e7a' },  // Балкон принцессы
-        { x: 50, y: 220, width: 80, height: 15, color: '#78909c' },    // Левая защитная палуба
-        { x: 470, y: 220, width: 80, height: 15, color: '#78909c' }    // Правая защитная палуба
-    ];
-
-    // Принцесса на балконе!
-    const princess = {
-        x: 290,
-        y: 124,
-        width: 18,
-        height: 36,
-        saved: true,
-        hp: 100
-    };
-
-    // Массивы для лазеров и монстров
-    let lasers = [];
-    let monsters = [];
-    let score = 0;
-    let gameOver = false;
-    let spawnTimer = 0;
-    let spawnRate = 120; // Спавн каждые 2 секунды
-
-    // Клавиатура и мобильный тач
-    const keys = {};
-    const input = { left: false, right: false, jump: false };
-
-    window.addEventListener('keydown', e => { keys[e.key] = true; });
-    window.addEventListener('keyup', e => { keys[e.key] = false; });
-
-    function setupTouchButton(elementId, action) {
-        const btn = document.getElementById(elementId);
-        btn.addEventListener('touchstart', (e) => { e.preventDefault(); input[action] = true; }, { passive: false });
-        btn.addEventListener('touchend', (e) => { e.preventDefault(); input[action] = false; }, { passive: false });
-        btn.addEventListener('touchcancel', (e) => { e.preventDefault(); input[action] = false; }, { passive: false });
-    }
-    setupTouchButton('btnLeft', 'left');
-    setupTouchButton('btnRight', 'right');
-    setupTouchButton('btnJump', 'jump');
-
-    // Клик мышкой или тапом по канвасу для стрельбы лазером!
-    canvas.addEventListener('mousedown', (e) => {
-        if (gameOver) {
-            resetGame();
+    // Ждем полной загрузки DOM, чтобы избежать любых ошибок с поиском элементов
+    document.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById('gameCanvas');
+        if (!canvas) {
+            console.error("Canvas element not found!");
             return;
         }
-        shootLaser(e);
-    });
+        const ctx = canvas.getContext('2d');
 
-    // Для тач-скринов на телефонах (стрельба тапом)
-    canvas.addEventListener('touchstart', (e) => {
-        if (gameOver) {
-            resetGame();
-            return;
+        // Динамическое имя плейса из URL (если передано)
+        const urlParams = new URLSearchParams(window.location.search);
+        const placeName = urlParams.get('place');
+        const titleEl = document.getElementById('gameTitle');
+        if (titleEl && placeName) {
+            titleEl.innerText = placeName + ": Save the Princess!";
         }
-        if (e.touches.length > 0) {
-            shootLaser(e.touches[0]);
-        }
-    }, { passive: true });
 
-    function shootLaser(eventSource) {
-        // Получаем точные координаты клика на холсте
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        const targetX = (eventSource.clientX - rect.left) * scaleX;
-        const targetY = (eventSource.clientY - rect.top) * scaleY;
+        // Настройки игрока
+        const player = {
+            x: 280,
+            y: 200,
+            width: 22,
+            height: 38,
+            vx: 0,
+            vy: 0,
+            speed: 4,
+            jumpForce: 8.5,
+            grounded: false,
+            colors: {
+                skin: '#fcd303',
+                torso: '#d02020', // Красный торс защитника
+                legs: '#1565c0'   // Синие штаны
+            }
+        };
 
-        // Точка старта - голова нашего персонажа
-        const startX = player.x + player.width / 2;
-        const startY = player.y + 6;
+        const gravity = 0.38;
 
-        // Считаем угол полета
-        const angle = Math.atan2(targetY - startY, targetX - startX);
+        // Платформы нашего замка
+        const platforms = [
+            // Земля
+            { x: 0, y: 310, width: 600, height: 40, color: '#3e2723' }, 
+            // Башни и барьеры замка
+            { x: 200, y: 240, width: 200, height: 80, color: '#78909c' },  // Главный замок посередине
+            { x: 230, y: 160, width: 140, height: 20, color: '#546e7a' },  // Балкон принцессы
+            { x: 50, y: 220, width: 80, height: 15, color: '#78909c' },    // Левая защитная палуба
+            { x: 470, y: 220, width: 80, height: 15, color: '#78909c' }    // Правая защитная палуба
+        ];
 
-        // Добавляем лазерный луч в массив
-        lasers.push({
-            x: startX,
-            y: startY,
-            vx: Math.cos(angle) * 8,
-            vy: Math.sin(angle) * 8,
-            width: 4,
-            height: 4
-        });
-    }
-
-    function spawnMonster() {
-        // Монстры идут слева и справа
-        const side = Math.random() > 0.5 ? 'left' : 'right';
-        const startX = side === 'left' ? -20 : 620;
-        
-        monsters.push({
-            x: startX,
-            y: 270, // С уровня земли
-            width: 20,
+        // Принцесса на балконе!
+        const princess = {
+            x: 290,
+            y: 124,
+            width: 18,
             height: 36,
-            speed: 1.2 + Math.random() * 0.8,
-            targetX: 300, // Идут ломать центральные ворота замка
-            hp: 1
+            saved: true,
+            hp: 100
+        };
+
+        // Массивы для лазеров и монстров
+        let lasers = [];
+        let monsters = [];
+        let score = 0;
+        let gameOver = false;
+        let spawnTimer = 0;
+        let spawnRate = 120; // Спавн каждые 2 секунды
+
+        // Клавиатура и мобильный тач
+        const keys = {};
+        const input = { left: false, right: false, jump: false };
+
+        window.addEventListener('keydown', e => { keys[e.key] = true; });
+        window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+        // Безопасное добавление тач-событий (защита от null)
+        function setupTouchButton(elementId, action) {
+            const btn = document.getElementById(elementId);
+            if (!btn) return; // Если кнопки нет в HTML, просто пропускаем без падения скрипта
+            
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); input[action] = true; }, { passive: false });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); input[action] = false; }, { passive: false });
+            btn.addEventListener('touchcancel', (e) => { e.preventDefault(); input[action] = false; }, { passive: false });
+        }
+        
+        setupTouchButton('btnLeft', 'left');
+        setupTouchButton('btnRight', 'right');
+        setupTouchButton('btnJump', 'jump');
+
+        // Клик мышкой или тапом по канвасу для стрельбы лазером!
+        canvas.addEventListener('mousedown', (e) => {
+            if (gameOver) {
+                resetGame();
+                return;
+            }
+            shootLaser(e);
         });
-    }
 
-    function resetGame() {
-        player.x = 280;
-        player.y = 200;
-        player.vx = 0;
-        player.vy = 0;
-        princess.hp = 100;
-        score = 0;
-        lasers = [];
-        monsters = [];
-        gameOver = false;
-    }
+        canvas.addEventListener('touchstart', (e) => {
+            if (gameOver) {
+                resetGame();
+                return;
+            }
+            if (e.touches.length > 0) {
+                shootLaser(e.touches[0]);
+            }
+        }, { passive: true });
 
-    function update() {
-        if (gameOver) return;
+        function shootLaser(eventSource) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const targetX = (eventSource.clientX - rect.left) * scaleX;
+            const targetY = (eventSource.clientY - rect.top) * scaleY;
 
-        // Движение игрока
-        const moveRight = keys['ArrowRight'] || keys['d'] || keys['D'] || input.right;
-        const moveLeft = keys['ArrowLeft'] || keys['a'] || keys['A'] || input.left;
-        const doJump = keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' '] || input.jump;
+            const startX = player.x + player.width / 2;
+            const startY = player.y + 6;
 
-        if (moveRight) player.vx = player.speed;
-        else if (moveLeft) player.vx = -player.speed;
-        else player.vx = 0;
+            const angle = Math.atan2(targetY - startY, targetX - startX);
 
-        if (doJump && player.grounded) {
-            player.vy = -player.jumpForce;
+            lasers.push({
+                x: startX,
+                y: startY,
+                vx: Math.cos(angle) * 8,
+                vy: Math.sin(angle) * 8,
+                width: 4,
+                height: 4
+            });
+        }
+
+        function spawnMonster() {
+            const side = Math.random() > 0.5 ? 'left' : 'right';
+            const startX = side === 'left' ? -20 : 620;
+            
+            monsters.push({
+                x: startX,
+                y: 274, // Земля
+                width: 20,
+                height: 36,
+                speed: 1.0 + Math.random() * 0.8,
+                targetX: 300, 
+                hp: 1
+            });
+        }
+
+        function resetGame() {
+            player.x = 280;
+            player.y = 200;
+            player.vx = 0;
+            player.vy = 0;
+            princess.hp = 100;
+            score = 0;
+            lasers = [];
+            monsters = [];
+            gameOver = false;
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // Движение игрока
+            const moveRight = keys['ArrowRight'] || keys['d'] || keys['D'] || keys['в'] || keys['В'] || input.right;
+            const moveLeft = keys['ArrowLeft'] || keys['a'] || keys['A'] || keys['ф'] || keys['Ф'] || input.left;
+            const doJump = keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' '] || keys['ц'] || keys['Ц'] || input.jump;
+
+            if (moveRight) player.vx = player.speed;
+            else if (moveLeft) player.vx = -player.speed;
+            else player.vx = 0;
+
+            if (doJump && player.grounded) {
+                player.vy = -player.jumpForce;
+                player.grounded = false;
+            }
+
+            player.vy += gravity;
+            player.x += player.vx;
+            player.y += player.vy;
+
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
             player.grounded = false;
-        }
+            for (let plat of platforms) {
+                if (player.x < plat.x + plat.width &&
+                    player.x + player.width > plat.x &&
+                    player.y + player.height >= plat.y &&
+                    player.y + player.height - player.vy <= plat.y + 10) {
+                    
+                    player.y = plat.y - player.height;
+                    player.vy = 0;
+                    player.grounded = true;
+                }
+            }
 
-        player.vy += gravity;
-        player.x += player.vx;
-        player.y += player.vy;
+            // Полет лазеров
+            for (let i = lasers.length - 1; i >= 0; i--) {
+                let l = lasers[i];
+                l.x += l.vx;
+                l.y += l.vy;
+                if (l.x < 0 || l.x > canvas.width || l.y < 0 || l.y > canvas.height) {
+                    lasers.splice(i, 1);
+                }
+            }
 
-        // Удержание в границах экрана
-        if (player.x < 0) player.x = 0;
-        if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            // Спавн зомби
+            spawnTimer++;
+            if (spawnTimer >= spawnRate) {
+                spawnMonster();
+                spawnTimer = 0;
+                if (spawnRate > 40) spawnRate -= 1;
+            }
 
-        // Проверка столкновений с платформами замка
-        player.grounded = false;
-        for (let plat of platforms) {
-            if (player.x < plat.x + plat.width &&
-                player.x + player.width > plat.x &&
-                player.y + player.height >= plat.y &&
-                player.y + player.height - player.vy <= plat.y + 10) {
+            // Логика зомби
+            for (let i = monsters.length - 1; i >= 0; i--) {
+                let m = monsters[i];
                 
-                player.y = plat.y - player.height;
-                player.vy = 0;
-                player.grounded = true;
-            }
-        }
+                if (m.x < m.targetX) m.x += m.speed;
+                else if (m.x > m.targetX) m.x -= m.speed;
 
-        // Движение лазеров
-        for (let i = lasers.length - 1; i >= 0; i--) {
-            let l = lasers[i];
-            l.x += l.vx;
-            l.y += l.vy;
-            
-            // Удаляем лазер за пределами карты
-            if (l.x < 0 || l.x > canvas.width || l.y < 0 || l.y > canvas.height) {
-                lasers.splice(i, 1);
-            }
-        }
-
-        // Спавн монстров
-        spawnTimer++;
-        if (spawnTimer >= spawnRate) {
-            spawnMonster();
-            spawnTimer = 0;
-            // Постепенно увеличиваем сложность
-            if (spawnRate > 40) spawnRate -= 2;
-        }
-
-        // Логика монстров
-        for (let i = monsters.length - 1; i >= 0; i--) {
-            let m = monsters[i];
-            
-            // Монстры движутся к центру замка
-            if (m.x < m.targetX) m.x += m.speed;
-            else if (m.x > m.targetX) m.x -= m.speed;
-
-            // Если монстры подошли в упор к замку, они начинают наносить урон здоровью принцессы!
-            if (Math.abs(m.x - m.targetX) < 15) {
-                princess.hp -= 0.5; // Наносят урон
-                if (princess.hp <= 0) {
-                    princess.hp = 0;
-                    gameOver = true;
+                if (Math.abs(m.x - m.targetX) < 15) {
+                    princess.hp -= 0.3;
+                    if (princess.hp <= 0) {
+                        princess.hp = 0;
+                        gameOver = true;
+                    }
                 }
-            }
 
-            // Проверка попадания лазера в монстра
-            for (let j = lasers.length - 1; j >= 0; j--) {
-                let l = lasers[j];
-                if (l.x > m.x && l.x < m.x + m.width && l.y > m.y && l.y < m.y + m.height) {
-                    // Уничтожаем монстра, убираем лазер
-                    monsters.splice(i, 1);
-                    lasers.splice(j, 1);
-                    score += 20; // 20 очков за монстра!
-                    break;
+                for (let j = lasers.length - 1; j >= 0; j--) {
+                    let l = lasers[j];
+                    if (l.x > m.x && l.x < m.x + m.width && l.y > m.y && l.y < m.y + m.height) {
+                        monsters.splice(i, 1);
+                        lasers.splice(j, 1);
+                        score += 20;
+                        break;
+                    }
                 }
             }
         }
-    }
 
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Ночные звезды
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.fillRect(100, 30, 2, 2);
-        ctx.fillRect(250, 60, 2, 2);
-        ctx.fillRect(450, 40, 2, 2);
-        ctx.fillRect(550, 90, 2, 2);
+            // Красивый градиент ночного неба
+            let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            skyGrad.addColorStop(0, "#080f1a");
+            skyGrad.addColorStop(1, "#112233");
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Красивая красная луна
-        ctx.fillStyle = '#ff5252';
-        ctx.beginPath();
-        ctx.arc(80, 60, 20, 0, Math.PI * 2);
-        ctx.fill();
+            // Звезды
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillRect(100, 30, 2, 2);
+            ctx.fillRect(250, 60, 2, 2);
+            ctx.fillRect(450, 40, 2, 2);
+            ctx.fillRect(550, 90, 2, 2);
 
-        // 2. Отрисовка замка (платформ)
-        for (let plat of platforms) {
-            ctx.fillStyle = plat.color;
-            ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
-            ctx.strokeStyle = '#263238';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(plat.x, plat.y, plat.width, plat.height);
-        }
+            // Красная луна
+            ctx.fillStyle = '#ff5252';
+            ctx.beginPath();
+            ctx.arc(80, 60, 20, 0, Math.PI * 2);
+            ctx.fill();
 
-        // 3. Отрисовка принцессы (сидит на верхнем балконе)
-        if (princess.hp > 0) {
-            // Розовое платье
-            ctx.fillStyle = '#ff4081';
-            ctx.fillRect(princess.x + 2, princess.y + 14, 14, 22);
-            ctx.strokeStyle = '#000';
-            ctx.strokeRect(princess.x + 2, princess.y +
+            // Платформы
+            for (let plat of platforms) {
+                ctx.fillStyle = plat.color;
+                ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+                ctx.strokeStyle = '#263238';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(plat.x, plat.y, plat.width, plat.height);
+            }
+
+            // Принцесса
+            if (princess.hp > 0) {
+                ctx.fillStyle = '#ff4081';
+                ctx.fillRect(princess.x + 2, princess.y + 14, 14, 22);
+                ctx.strokeStyle = '#000';
+                ctx.strokeRect(princess.x + 2, princess.y + 14, 14, 22);
+                
+                ctx.fillStyle = '#ffe082';
+                ctx.fillRect(princess.x + 4, princess.y, 10, 14);
+                ctx.strokeRect(princess.x + 4, princess.y, 10, 14);
+                
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.moveTo(princess.x + 4, princess.y);
+                ctx.lineTo(princess.x + 6, princess.y - 4);
+                ctx.lineTo(princess.x + 9,
