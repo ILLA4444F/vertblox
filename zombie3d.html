@@ -10,12 +10,12 @@
         .GameContainerBox { border: 1px solid #7795bd; background-color: #111; padding: 10px; text-align: center; color: #fff; }
         .GameHeader { font-size: 18px; font-weight: bold; color: #ff3333; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         
-        .CanvasWrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; background: #000; overflow: hidden; }
+        .CanvasWrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; background: #000; overflow: hidden; cursor: pointer; }
         canvas { background-color: #000; border: 3px solid #ff3333; display: block; width: 100%; height: auto; }
         
         .FullscreenBtn { background: #ff3333; color: white; border: none; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 3px; }
 
-        /* Круговой сенсорный джойстик */
+        /* Круговой сенсорный джойстик (только для мобилок) */
         .JoystickContainer {
             position: absolute;
             bottom: 20px;
@@ -40,7 +40,7 @@
             transition: transform 0.05s ease;
         }
 
-        /* Кнопка стрельбы для правой руки */
+        /* Кнопка стрельбы (только для мобилок) */
         .ShootButton {
             position: absolute;
             bottom: 30px;
@@ -73,25 +73,23 @@
     <div id="MainBody">
         <div class="GameContainerBox">
             <div class="GameHeader">
-                <span>ZOMBIE SHOOTER 3D (FPS)</span>
+                <span>HELLISH ZOMBIE 3D</span>
                 <button class="FullscreenBtn" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
             </div>
             
             <div class="CanvasWrapper" id="gameArea">
                 <canvas id="fpsCanvas" width="400" height="250"></canvas>
                 
-                <!-- Виртуальный круговой джойстик (Слева) -->
                 <div class="JoystickContainer" id="joystick">
                     <div class="JoystickStick" id="stick"></div>
                 </div>
 
-                <!-- Кнопка атаки (Справа) -->
                 <div class="ShootButton" id="shootBtn">FIRE</div>
             </div>
 
             <div class="ControlsHelp">
-                <strong>ПК:</strong> Клавиши WASD — движение, Стрелки влево/вправо — поворот камеры, Пробел — огонь.<br>
-                <strong>Смартфон:</strong> Крути джойстик слева для перемещения и обзора, жми FIRE справа для стрельбы! Уничтожь 15 зомби!
+                <strong>ПК:</strong> Кликни по экрану игры, чтобы захватить мышь. Двигай <strong>мышкой</strong> для обзора, ходи на <strong>WASD</strong>, стреляй левым кликом (ЛКМ).<br>
+                <strong>Смартфон:</strong> Крути джойстик слева для перемещения и обзора, жми FIRE для стрельбы!
             </div>
             <br>
             <a href="games.html" class="BackBtn">← К списку игр</a>
@@ -103,8 +101,9 @@
 document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById('fpsCanvas');
     const ctx = canvas.getContext('2d');
+    const gameArea = document.getElementById('gameArea');
 
-    // Карта лабиринта (1 - стена, 0 - проход)
+    // Карта (1 - адская стена, 0 - проход)
     const mapSize = 12;
     const map = [
         [1,1,1,1,1,1,1,1,1,1,1,1],
@@ -123,22 +122,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Игрок
     const player = {
-        x: 2.5, y: 2.5, // Позиция в клетках карты
-        angle: 0,       // Направление взгляда (в радианах)
-        fov: Math.PI / 3, // Угол обзора (~60 градусов)
-        speed: 0.04,
-        rotSpeed: 0.03,
+        x: 2.5, y: 2.5,
+        angle: 0,       
+        fov: Math.PI / 3, 
+        speed: 0.05,
+        rotSpeed: 0.003, // Для плавного обзора мышью
         hp: 100,
         kills: 0,
         winKills: 15
     };
 
-    // Зомби (враги)
-    let zombies = [
-        { x: 5.5, y: 3.5, hp: 1, active: true },
-        { x: 9.5, y: 5.5, hp: 1, active: true },
-        { x: 3.5, y: 8.5, hp: 1, active: true },
-        { x: 7.5, y: 10.5, hp: 1, active: true }
+    // Объекты на карте (Зомби и Бочки)
+    let entities = [
+        { type: 'zombie', x: 5.5, y: 3.5, active: true },
+        { type: 'zombie', x: 9.5, y: 5.5, active: true },
+        { type: 'zombie', x: 3.5, y: 8.5, active: true },
+        { type: 'barrel', x: 4.5, y: 4.5, active: true }, // Бочка
+        { type: 'barrel', x: 8.5, y: 8.5, active: true }  // Бочка
     ];
 
     let keys = {};
@@ -146,8 +146,40 @@ document.addEventListener("DOMContentLoaded", () => {
     let shootAnim = 0;
     let gameOver = false;
     let gameWon = false;
+    let skyOffset = 0; // Для движения облаков
 
-    // Управление джойстиком
+    // Эффект взрыва (координаты и кадры)
+    let explosion = null;
+
+    // ЗАХВАТ МЫШИ ДЛЯ ПК
+    gameArea.addEventListener('click', () => {
+        if (!gameOver && !gameWon) {
+            canvas.requestPointerLock();
+        } else {
+            resetGame();
+        }
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+        if (document.pointerLockElement === canvas) {
+            document.addEventListener("mousemove", updateCameraWithMouse, false);
+        } else {
+            document.removeEventListener("mousemove", updateCameraWithMouse, false);
+        }
+    });
+
+    function updateCameraWithMouse(e) {
+        player.angle += e.movementX * player.rotSpeed;
+    }
+
+    // Обработка стрельбы мышкой на ПК
+    canvas.addEventListener('mousedown', (e) => {
+        if (document.pointerLockElement === canvas && e.button === 0) {
+            triggerShoot();
+        }
+    });
+
+    // Управление джойстиком (телефон)
     const joystick = document.getElementById('joystick');
     const stick = document.getElementById('stick');
     let joyX = 0, joyY = 0;
@@ -184,79 +216,101 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         stick.style.transform = `translate(${dx}px, ${dy}px)`;
-        // Нормализуем значения от -1 до 1
         joyX = dx / maxDist;
         joyY = dy / maxDist;
     }
 
-    // Кнопка стрельбы
     const fireBtn = document.getElementById('shootBtn');
     fireBtn.addEventListener('touchstart', (e) => {
         e.preventDefault();
         triggerShoot();
     }, { passive: false });
 
-    window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key === ' ') triggerShoot(); });
+    window.addEventListener('keydown', e => { 
+        keys[e.key.toLowerCase()] = true; 
+        if (e.key === ' ') triggerShoot(); 
+    });
     window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
     function triggerShoot() {
         if (gameOver || gameWon) { resetGame(); return; }
         if (!isShooting) {
             isShooting = true;
-            shootAnim = 5; // кадры анимации отдачи
+            shootAnim = 5;
 
-            // Проверка попадания по центру экрана (лучевой выстрел)
-            let hitZ = null;
+            // Луч попадания по центру экрана
+            let hitEntity = null;
             let minDist = 999;
-            zombies.forEach(z => {
-                if (!z.active) return;
-                // Находим угол к зомби
-                let dx = z.x - player.x;
-                let dy = z.y - player.y;
-                let angleToZ = Math.atan2(dy, dx) - player.angle;
+            
+            entities.forEach(ent => {
+                if (!ent.active) return;
+                let dx = ent.x - player.x;
+                let dy = ent.y - player.y;
+                let angleToEnt = Math.atan2(dy, dx) - player.angle;
                 
-                // Нормализация угла в пределах [-PI, PI]
-                while (angleToZ < -Math.PI) angleToZ += Math.PI * 2;
-                while (angleToZ > Math.PI) angleToZ -= Math.PI * 2;
+                while (angleToEnt < -Math.PI) angleToEnt += Math.PI * 2;
+                while (angleToEnt > Math.PI) angleToEnt -= Math.PI * 2;
 
-                if (Math.abs(angleToZ) < 0.2) { // Попал в прицел
+                if (Math.abs(angleToEnt) < 0.15) { 
                     let d = Math.sqrt(dx*dx + dy*dy);
                     if (d < minDist) {
                         minDist = d;
-                        hitZ = z;
+                        hitEntity = ent;
                     }
                 }
             });
 
-            if (hitZ) {
-                hitZ.active = false;
-                player.kills++;
-                if (player.kills >= player.winKills) {
-                    gameWon = true;
+            if (hitEntity) {
+                if (hitEntity.type === 'zombie') {
+                    hitEntity.active = false;
+                    player.kills++;
+                    if (player.kills >= player.winKills) gameWon = true;
+                    setTimeout(() => spawnNewEntity('zombie'), 2000);
+                } else if (hitEntity.type === 'barrel') {
+                    // Взрыв бочки!
+                    hitEntity.active = false;
+                    triggerExplosion(hitEntity.x, hitEntity.y);
+                    setTimeout(() => spawnNewEntity('barrel'), 5000);
                 }
-                // Спавним нового зомби где-то вдалеке
-                setTimeout(spawnNewZombie, 2000);
             }
         }
     }
 
-    function spawnNewZombie() {
+    function triggerExplosion(bx, by) {
+        explosion = { x: bx, y: by, size: 0, max: 20 };
+        // Наносим урон зомби вокруг бочки
+        entities.forEach(ent => {
+            if (ent.type === 'zombie' && ent.active) {
+                let dist = Math.sqrt((ent.x - bx)**2 + (ent.y - by)**2);
+                if (dist < 2.5) {
+                    ent.active = false;
+                    player.kills++;
+                    if (player.kills >= player.winKills) gameWon = true;
+                    setTimeout(() => spawnNewEntity('zombie'), 2000);
+                }
+            }
+        });
+    }
+
+    function spawnNewEntity(type) {
         if (gameOver || gameWon) return;
         let rx, ry;
         do {
             rx = Math.floor(Math.random() * (mapSize - 2)) + 1;
             ry = Math.floor(Math.random() * (mapSize - 2)) + 1;
-        } while (map[ry][rx] === 1 || Math.sqrt((rx - player.x)**2 + (ry - player.y)**2) < 4);
+        } while (map[ry][rx] === 1 || Math.sqrt((rx - player.x)**2 + (ry - player.y)**2) < 3);
 
-        zombies.push({ x: rx + 0.5, y: ry + 0.5, hp: 1, active: true });
+        entities.push({ type: type, x: rx + 0.5, y: ry + 0.5, active: true });
     }
 
     function resetGame() {
         player.x = 2.5; player.y = 2.5; player.angle = 0; player.hp = 100; player.kills = 0;
-        zombies = [
-            { x: 5.5, y: 3.5, hp: 1, active: true },
-            { x: 9.5, y: 5.5, hp: 1, active: true },
-            { x: 3.5, y: 8.5, hp: 1, active: true }
+        entities = [
+            { type: 'zombie', x: 5.5, y: 3.5, active: true },
+            { type: 'zombie', x: 9.5, y: 5.5, active: true },
+            { type: 'zombie', x: 3.5, y: 8.5, active: true },
+            { type: 'barrel', x: 4.5, y: 4.5, active: true },
+            { type: 'barrel', x: 8.5, y: 8.5, active: true }
         ];
         gameOver = false; gameWon = false;
     }
@@ -264,48 +318,65 @@ document.addEventListener("DOMContentLoaded", () => {
     function update() {
         if (gameOver || gameWon) return;
 
-        // Поворот и движение с клавиатуры
+        // Плывущие облака
+        skyOffset += 0.2;
+
         let moveStep = 0;
         let rotStep = 0;
 
-        if (keys['w'] || keys['arrowup']) moveStep = player.speed;
-        if (keys['s'] || keys['arrowdown']) moveStep = -player.speed;
-        if (keys['a']) player.angle -= player.rotSpeed;
-        if (keys['d']) player.angle += player.rotSpeed;
-        if (keys['arrowleft']) player.angle -= player.rotSpeed;
-        if (keys['arrowright']) player.angle += player.rotSpeed;
-
-        // Движение с джойстика (Мульти-вектор)
-        if (isJoyActive) {
-            // joyY отвечает за движение вперед/назад
-            moveStep = -joyY * player.speed * 1.5;
-            // joyX плавно поворачивает камеру
-            player.angle += joyX * player.rotSpeed * 1.5;
+        // Движение WASD / Стрелки
+        if (keys['w']) moveStep = player.speed;
+        if (keys['s']) moveStep = -player.speed;
+        if (keys['a']) {
+            // Стрэйф влево
+            let strafeAngle = player.angle - Math.PI / 2;
+            let newX = player.x + Math.cos(strafeAngle) * player.speed;
+            let newY = player.y + Math.sin(strafeAngle) * player.speed;
+            if (map[Math.floor(player.y)][Math.floor(newX)] === 0) player.x = newX;
+            if (map[Math.floor(newY)][Math.floor(player.x)] === 0) player.y = newY;
+        }
+        if (keys['d']) {
+            // Стрэйф вправо
+            let strafeAngle = player.angle + Math.PI / 2;
+            let newX = player.x + Math.cos(strafeAngle) * player.speed;
+            let newY = player.y + Math.sin(strafeAngle) * player.speed;
+            if (map[Math.floor(player.y)][Math.floor(newX)] === 0) player.x = newX;
+            if (map[Math.floor(newY)][Math.floor(player.x)] === 0) player.y = newY;
         }
 
-        // Новая позиция с учетом стен
+        // Поворот клавишами (если нет захвата мыши)
+        if (keys['arrowleft']) player.angle -= 0.04;
+        if (keys['arrowright']) player.angle += 0.04;
+
+        // Управление с джойстика на телефоне
+        if (isJoyActive) {
+            moveStep = -joyY * player.speed * 1.5;
+            player.angle += joyX * 0.05;
+        }
+
+        // Вычисление новой позиции по направлению взгляда
         let newX = player.x + Math.cos(player.angle) * moveStep;
         let newY = player.y + Math.sin(player.angle) * moveStep;
 
         if (map[Math.floor(player.y)][Math.floor(newX)] === 0) player.x = newX;
         if (map[Math.floor(newY)][Math.floor(player.x)] === 0) player.y = newY;
 
-        // Движение зомби к игроку
-        zombies.forEach(z => {
-            if (!z.active) return;
-            let dx = player.x - z.x;
-            let dy = player.y - z.y;
+        // Преследование игрока зомби
+        entities.forEach(ent => {
+            if (ent.type !== 'zombie' || !ent.active) return;
+            let dx = player.x - ent.x;
+            let dy = player.y - ent.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
             
             if (dist > 0.3) {
-                z.x += (dx / dist) * 0.015;
-                z.y += (dy / dist) * 0.015;
+                ent.x += (dx / dist) * 0.018;
+                ent.y += (dy / dist) * 0.018;
             } else {
-                // Атака зомби
-                player.hp -= 0.6;
+                player.hp -= 0.8;
                 if (player.hp <= 0) {
                     player.hp = 0;
                     gameOver = true;
+                    document.exitPointerLock();
                 }
             }
         });
@@ -314,14 +385,36 @@ document.addEventListener("DOMContentLoaded", () => {
             shootAnim--;
             if (shootAnim <= 0) isShooting = false;
         }
+
+        if (explosion) {
+            explosion.size++;
+            if (explosion.size > explosion.max) explosion = null;
+        }
     }
 
-    // Raycasting отрисовка 3D окружения
-    function draw3D() {
-        ctx.fillStyle = '#111'; // Потолок
+    // Raycasting рендер
+    function draw() {
+        // 1. АДСКОЕ НЕБО С ОБЛАКАМИ
+        ctx.fillStyle = '#1a0000'; // Багровый закат
         ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
-        ctx.fillStyle = '#222'; // Пол
+
+        // Облака
+        ctx.fillStyle = 'rgba(60, 10, 10, 0.6)';
+        for (let i = 0; i < 4; i++) {
+            let cx = ((i * 150 + skyOffset) % (canvas.width + 100)) - 50;
+            ctx.fillRect(cx, 15, 60, 15);
+            ctx.fillRect(cx + 10, 8, 40, 10);
+        }
+
+        // 2. КРОВАВЫЙ АДСКИЙ ПОЛ (СЕТКА/ПЛИТКА)
+        ctx.fillStyle = '#4a0000'; // Кроваво-красная земля
         ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+
+        // Горизонтальные кровавые стыки (перспектива)
+        ctx.fillStyle = '#000000';
+        for (let y = canvas.height / 2; y < canvas.height; y += 12) {
+            ctx.fillRect(0, y, canvas.width, 1);
+        }
 
         const numRays = canvas.width;
         let zBuffer = [];
@@ -347,15 +440,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            // Фикс эффекта рыбьего глаза
             let correctedDist = distanceToWall * Math.cos(rayAngle - player.angle);
             zBuffer[i] = correctedDist;
 
             let wallHeight = Math.min(canvas.height, (canvas.height / correctedDist));
             
-            // Текстура стены зависящая от расстояния (туман войны)
-            let colorVal = Math.max(20, Math.min(200, 200 - correctedDist * 13));
-            ctx.strokeStyle = `rgb(${colorVal}, 0, 0)`;
+            // Текстура стены (Черный кирпич в инфернальном свете)
+            let colorVal = Math.max(10, Math.min(120, 120 - correctedDist * 8));
+            ctx.strokeStyle = `rgb(${colorVal}, ${colorVal * 0.2}, ${colorVal * 0.2})`; // Багровые стены
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(i, (canvas.height - wallHeight) / 2);
@@ -363,72 +455,122 @@ document.addEventListener("DOMContentLoaded", () => {
             ctx.stroke();
         }
 
-        // Отрисовка Зомби (Спрайты)
-        zombies.forEach(z => {
-            if (!z.active) return;
-            let dx = z.x - player.x;
-            let dy = z.y - player.y;
-            
-            let angleToZ = Math.atan2(dy, dx) - player.angle;
-            while (angleToZ < -Math.PI) angleToZ += Math.PI * 2;
-            while (angleToZ > Math.PI) angleToZ -= Math.PI * 2;
-
+        // Сортировка объектов по расстоянию для правильного рендеринга
+        let renderedEntities = entities.map(e => {
+            let dx = e.x - player.x;
+            let dy = e.y - player.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
+            return { ent: e, dist: dist, dx: dx, dy: dy };
+        }).sort((a, b) => b.dist - a.dist);
 
-            // Проверяем, виден ли зомби игроку
-            if (Math.abs(angleToZ) < player.fov / 1.5 && dist > 0.2) {
-                let screenX = (canvas.width / 2) + Math.tan(angleToZ) * (canvas.width / 2);
-                let size = canvas.height / dist;
+        // Отрисовка объектов (Зомби, Бочки, Взрывы)
+        renderedEntities.forEach(item => {
+            let ent = item.ent;
+            if (!ent.active) return;
 
-                // Проверка Z-буфера, чтобы зомби не рисовался сквозь стены
-                if (screenX >= 0 && screenX < canvas.width && zBuffer[Math.floor(screenX)] > dist) {
-                    // Тень зомби
-                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                    ctx.fillRect(screenX - size/4, (canvas.height/2) + size/3, size/2, 10);
+            let angleToEnt = Math.atan2(item.dy, item.dx) - player.angle;
+            while (angleToEnt < -Math.PI) angleToEnt += Math.PI * 2;
+            while (angleToEnt > Math.PI) angleToEnt -= Math.PI * 2;
 
-                    // Спрайт тела
-                    ctx.fillStyle = '#2e7d32'; // Зеленое тело
-                    ctx.fillRect(screenX - size/6, (canvas.height - size)/2 + size/4, size/3, size/2);
+            if (Math.abs(angleToEnt) < player.fov / 1.3 && item.dist > 0.2) {
+                let screenX = (canvas.width / 2) + Math.tan(angleToEnt) * (canvas.width / 2);
+                let size = canvas.height / item.dist;
+
+                if (screenX >= 0 && screenX < canvas.width && zBuffer[Math.floor(screenX)] > item.dist) {
                     
-                    // Голова
-                    ctx.fillStyle = '#81c784';
-                    ctx.fillRect(screenX - size/8, (canvas.height - size)/2, size/4, size/4);
-                    
-                    // Кровавые глаза
-                    ctx.fillStyle = '#ff0000';
-                    ctx.fillRect(screenX - size/12, (canvas.height - size)/2 + 5, 2, 2);
-                    ctx.fillRect(screenX + size/24, (canvas.height - size)/2 + 5, 2, 2);
+                    if (ent.type === 'zombie') {
+                        // Кровавая тень под зомби
+                        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                        ctx.fillRect(screenX - size/4, (canvas.height/2) + size/3, size/2, 8);
+
+                        // Зомби
+                        ctx.fillStyle = '#1e4620'; // Темно-зеленая гнилая плоть
+                        ctx.fillRect(screenX - size/6, (canvas.height - size)/2 + size/4, size/3, size/2);
+                        
+                        // Кровавая рубаха
+                        ctx.fillStyle = '#800c0c';
+                        ctx.fillRect(screenX - size/6, (canvas.height - size)/2 + size/3, size/3, size/4);
+
+                        // Голова
+                        ctx.fillStyle = '#558b2f';
+                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2, size/4, size/4);
+                        
+                        // Глаза
+                        ctx.fillStyle = '#ff1744';
+                        ctx.fillRect(screenX - size/12, (canvas.height - size)/2 + 4, 3, 3);
+                        ctx.fillRect(screenX + size/24, (canvas.height - size)/2 + 4, 3, 3);
+                    } 
+                    else if (ent.type === 'barrel') {
+                        // Металлическая бочка (серо-оранжевая)
+                        ctx.fillStyle = '#37474f';
+                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2 + size/4, size/4, size/2.2);
+
+                        // Оранжевая полоса (огнеопасно!)
+                        ctx.fillStyle = '#ff6d00';
+                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2 + size/2.5, size/4, size/10);
+
+                        // Ребра жесткости бочки
+                        ctx.fillStyle = '#212121';
+                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2 + size/4, size/4, 4);
+                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2 + size/1.6, size/4, 4);
+                    }
                 }
             }
         });
 
-        // Мушка (прицел по центру)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.fillRect(canvas.width / 2 - 4, canvas.height / 2 - 1, 8, 2);
-        ctx.fillRect(canvas.width / 2 - 1, canvas.height / 2 - 4, 2, 8);
+        // Отрисовка взрыва на экране (если есть)
+        if (explosion) {
+            let edx = explosion.x - player.x;
+            let edy = explosion.y - player.y;
+            let edist = Math.sqrt(edx*edx + edy*edy);
+            let eAngle = Math.atan2(edy, edx) - player.angle;
+            while (eAngle < -Math.PI) eAngle += Math.PI * 2;
+            while (eAngle > Math.PI) eAngle -= Math.PI * 2;
 
-        // Оружие игрока с отдачей
+            if (Math.abs(eAngle) < player.fov / 1.3 && edist > 0.2) {
+                let screenX = (canvas.width / 2) + Math.tan(eAngle) * (canvas.width / 2);
+                let size = (canvas.height / edist) * (explosion.size / 10);
+                
+                ctx.fillStyle = `rgba(255, ${200 - explosion.size * 8}, 0, ${1 - explosion.size / explosion.max})`;
+                ctx.beginPath();
+                ctx.arc(screenX, canvas.height / 2, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Прицел
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fillRect(canvas.width / 2 - 5, canvas.height / 2 - 1, 10, 2);
+        ctx.fillRect(canvas.width / 2 - 1, canvas.height / 2 - 5, 2, 10);
+
+        // Рука/оружие с анимацией отката
         let oY = isShooting ? 15 : 0;
-        ctx.fillStyle = '#555';
-        ctx.fillRect(canvas.width / 2 - 15, canvas.height - 50 + oY, 30, 50);
-        ctx.fillStyle = '#222';
-        ctx.fillRect(canvas.width / 2 - 5, canvas.height - 70 + oY, 10, 30);
+        ctx.fillStyle = '#37474f';
+        ctx.fillRect(canvas.width / 2 - 12, canvas.height - 60 + oY, 24, 60);
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(canvas.width / 2 - 4, canvas.height - 85 + oY, 8, 45);
+
         if (isShooting) {
-            // Вспышка выстрела
-            ctx.fillStyle = '#ffea00';
+            // Вспышка дульного пламени
+            ctx.fillStyle = '#ff9100';
             ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height - 75, 15, 0, Math.PI * 2);
+            ctx.arc(canvas.width / 2, canvas.height - 90, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height - 90, 8, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // Интерфейс
-        ctx.fillStyle = '#ff3333';
+        // HUD интерфейс
+        ctx.fillStyle = '#ff1744';
         ctx.font = 'bold 12px Arial';
-        ctx.fillText(`KILLS: ${player.kills} / ${player.winKills}`, 10, 20);
-        ctx.fillText(`HP: ${Math.floor(player.hp)}%`, 10, 35);
+        ctx.fillText(`KILLS: ${player.kills} / ${player.winKills}`, 15, 20);
+        ctx.fillText(`HP: ${Math.floor(player.hp)}%`, 15, 35);
 
+        // Экран конца игры
         if (gameWon) {
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillStyle = 'rgba(0,0,0,0.85)';
             ctx.fillRect(0,0,canvas.width,canvas.height);
             ctx.fillStyle = '#00ff00';
             ctx.font = 'bold 24px Arial';
@@ -436,18 +578,18 @@ document.addEventListener("DOMContentLoaded", () => {
             ctx.fillText("VICTORY!", canvas.width/2, canvas.height/2);
             ctx.fillStyle = '#fff';
             ctx.font = '12px Arial';
-            ctx.fillText("You survived the apocalypse!", canvas.width/2, canvas.height/2 + 25);
-            ctx.fillText("Click here to restart", canvas.width/2, canvas.height/2 + 50);
+            ctx.fillText("You purged the underworld!", canvas.width/2, canvas.height/2 + 25);
+            ctx.fillText("Click here to play again", canvas.width/2, canvas.height/2 + 50);
             ctx.textAlign = 'left';
         }
 
         if (gameOver) {
-            ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            ctx.fillStyle = 'rgba(0,0,0,0.85)';
             ctx.fillRect(0,0,canvas.width,canvas.height);
             ctx.fillStyle = '#ff0000';
             ctx.font = 'bold 24px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText("YOU DIED!", canvas.width/2, canvas.height/2);
+            ctx.fillText("YOU WERE CONSUMED!", canvas.width/2, canvas.height/2);
             ctx.fillStyle = '#fff';
             ctx.font = '12px Arial';
             ctx.fillText("Click here to respawn", canvas.width/2, canvas.height/2 + 25);
@@ -457,7 +599,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function loop() {
         update();
-        draw3D();
+        draw();
         requestAnimationFrame(loop);
     }
     loop();
