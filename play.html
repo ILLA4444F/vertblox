@@ -453,4 +453,104 @@
                 ctx.beginPath();
                 ctx.moveTo(princess.x + 4, princess.y);
                 ctx.lineTo(princess.x + 6, princess.y - 4);
-                ctx.lineTo(princess.x + 9,
+                ctx.lineTo(princess.x + 9, princess.y);
+                ctx.lineTo(princess.x + 12, princess.y - 4);
+                ctx.lineTo(princess.x + 14, princess.y);
+                ctx.fill();
+            }
+
+            // Лазеры
+            for (let l of lasers) {
+                ctx.fillStyle = '#ff0055';
+                ctx.shadowColor = '#ff0055';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(l.x, l.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0; 
+            }
+
+            // Монстры
+            for (let m of monsters) {
+                ctx.fillStyle = '#1b5e20';
+                ctx.fillRect(m.x + 2, m.y + 24, 7, 12);
+                ctx.fillRect(m.x + 11, m.y + 24, 7, 12);
+                
+                ctx.fillStyle = '#4caf50';
+                ctx.fillRect(m.x + 2, m.y + 10, 16, 14);
+                
+                ctx.fillStyle = '#81c784';
+                ctx.fillRect(m.x + 4, m.y, 12, 10);
+                ctx.strokeStyle = '#000';
+                ctx.strokeRect(m.x + 4, m.y, 12, 10);
+                
+                ctx.fillStyle = '#ff1744';
+                ctx.fillRect(m.x + 6, m.y + 3, 2, 2);
+                ctx.fillRect(m.x + 12, m.y + 3, 2, 2);
+            }
+
+            // Игрок
+            ctx.fillStyle = player.colors.legs;
+            ctx.fillRect(player.x + 2, player.y + 26, 9, 12);
+            ctx.fillRect(player.x + 11, player.y + 26, 9, 12);
+            ctx.strokeStyle = '#000';
+            ctx.strokeRect(player.x + 2, player.y + 26, 9, 12);
+            ctx.strokeRect(player.x + 11, player.y + 26, 9, 12);
+
+            ctx.fillStyle = player.colors.torso;
+            ctx.fillRect(player.x + 1, player.y + 12, 20, 14);
+            ctx.strokeRect(player.x + 1, player.y + 12, 20, 14);
+
+            ctx.fillStyle = player.colors.skin;
+            ctx.fillRect(player.x + 5, player.y, 12, 12);
+            ctx.strokeRect(player.x + 5, player.y, 12, 12);
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(player.x + 7, player.y + 3, 2, 2);
+            ctx.fillRect(player.x + 13, player.y + 3, 2, 2);
+            ctx.beginPath();
+            ctx.arc(player.x + 10, player.y + 8, 2, 0, Math.PI, false);
+            ctx.stroke();
+
+            // Очки и Здоровье
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Score: ' + score + ' VB', 15, 25);
+
+            ctx.fillText('Princess HP:', 420, 25);
+            ctx.fillStyle = '#ff1744';
+            ctx.fillRect(500, 15, 80, 12);
+            ctx.fillStyle = '#00e676';
+            ctx.fillRect(500, 15, 80 * (princess.hp / 100), 12);
+            ctx.strokeStyle = '#fff';
+            ctx.strokeRect(500, 15, 80, 12);
+
+            // Конец игры
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#ff1744';
+                ctx.font = 'bold 36px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 10);
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = '16px Arial';
+                ctx.fillText('Princess was captured! Score: ' + score, canvas.width / 2, canvas.height / 2 + 25);
+                ctx.fillText('Click anywhere to PLAY AGAIN', canvas.width / 2, canvas.height / 2 + 55);
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    });
+</script>
+</body>
+</html>
