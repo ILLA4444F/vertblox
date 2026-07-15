@@ -3,61 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>VERTBLOX: Zombie FPS 3D</title>
+    <title>VERTBLOX: Zombie 3D (Roblox Style)</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        body { touch-action: none; margin: 0; padding: 0; background-color: #000; }
+        body { touch-action: none; margin: 0; padding: 0; background-color: #000; overflow: hidden; }
         .GameContainerBox { border: 1px solid #7795bd; background-color: #111; padding: 10px; text-align: center; color: #fff; }
         .GameHeader { font-size: 18px; font-weight: bold; color: #ff3333; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         
-        .CanvasWrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; background: #000; overflow: hidden; cursor: pointer; }
-        canvas { background-color: #000; border: 3px solid #ff3333; display: block; width: 100%; height: auto; }
-        
-        .FullscreenBtn { background: #ff3333; color: white; border: none; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 3px; }
+        .CanvasWrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; background: #000; overflow: hidden; height: 350px; }
+        #gameCanvasContainer { width: 100%; height: 100%; border: 3px solid #ff3333; box-sizing: border-box; }
 
-        /* Круговой сенсорный джойстик (только для мобилок) */
-        .JoystickContainer {
+        /* Прицел для Shift-Lock */
+        .Crosshair {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 110px;
-            height: 110px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: none;
-            pointer-events: auto;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none; /* Включается только при Shift-Lock */
         }
-        .JoystickStick {
-            width: 45px;
-            height: 45px;
-            background: rgba(255, 51, 51, 0.7);
-            border: 2px solid #fff;
-            border-radius: 50%;
-            transition: transform 0.05s ease;
+        .Crosshair::before, .Crosshair::after {
+            content: '';
+            position: absolute;
+            background: #ff1744;
         }
+        .Crosshair::before { top: 4px; left: 0; width: 10px; height: 2px; }
+        .Crosshair::after { top: 0; left: 4px; width: 2px; height: 10px; }
 
-        /* Кнопка стрельбы (только для мобилок) */
-        .ShootButton {
+        /* Индикатор Shift-Lock */
+        .ShiftLockIndicator {
             position: absolute;
-            bottom: 30px;
-            right: 25px;
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 51, 51, 0.5);
-            border: 3px solid #ff3333;
-            border-radius: 50%;
-            color: #fff;
-            font-weight: bold;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            pointer-events: auto;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            border: 1px solid #ff3333;
+            pointer-events: none;
         }
 
         .ControlsHelp { margin-top: 10px; font-size: 11px; background-color: #222; padding: 6px; border: 1px dashed #ff3333; display: inline-block; color: #ccc; }
@@ -73,23 +60,20 @@
     <div id="MainBody">
         <div class="GameContainerBox">
             <div class="GameHeader">
-                <span>HELLISH ZOMBIE 3D</span>
-                <button class="FullscreenBtn" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
+                <span>VERTBLOX 3D: SHIFT-LOCK EDITION</span>
             </div>
             
             <div class="CanvasWrapper" id="gameArea">
-                <canvas id="fpsCanvas" width="400" height="250"></canvas>
-                
-                <div class="JoystickContainer" id="joystick">
-                    <div class="JoystickStick" id="stick"></div>
-                </div>
-
-                <div class="ShootButton" id="shootBtn">FIRE</div>
+                <div id="gameCanvasContainer"></div>
+                <div class="Crosshair" id="crosshair"></div>
+                <div class="ShiftLockIndicator" id="slIndicator">SHIFT-LOCK: OFF (Press Shift / Click)</div>
             </div>
 
             <div class="ControlsHelp">
-                <strong>ПК:</strong> Кликни по экрану игры, чтобы захватить мышь. Двигай <strong>мышкой</strong> для обзора, ходи на <strong>WASD</strong>, стреляй левым кликом (ЛКМ).<br>
-                <strong>Смартфон:</strong> Крути джойстик слева для перемещения и обзора, жми FIRE для стрельбы!
+                <strong>Управление:</strong> <br>
+                • <strong>WASD / Стрелочки</strong> — Бег персонажа.<br>
+                • <strong>Клавиша SHIFT или Клик по экрану</strong> — Вкл/Выкл <strong>Shift-Lock</strong> (захват мыши для вращения камерой).<br>
+                • <strong>Левая Клик Мыши (ЛКМ)</strong> — Стрелять по зомби и бочкам!
             </div>
             <br>
             <a href="games.html" class="BackBtn">← К списку игр</a>
@@ -99,16 +83,33 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const canvas = document.getElementById('fpsCanvas');
-    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('gameCanvasContainer');
     const gameArea = document.getElementById('gameArea');
+    const crosshair = document.getElementById('crosshair');
+    const slIndicator = document.getElementById('slIndicator');
 
-    // Карта (1 - адская стена, 0 - проход)
-    const mapSize = 12;
+    // Настройка сцены Three.js
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a0505); // Темно-багровый туман ада
+    scene.fog = new THREE.FogExp2(0x1a0505, 0.15);
+
+    const camera = new THREE.PerspectiveCamera(70, container.clientWidth / container.clientHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    // Освещение
+    const ambientLight = new THREE.AmbientLight(0xff3333, 0.6); // Багровый эмбиент
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffaaaa, 0.8);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+
+    // Карта (1 - стена, 0 - пусто)
     const map = [
         [1,1,1,1,1,1,1,1,1,1,1,1],
         [1,0,0,0,0,0,1,0,0,0,0,1],
-        [1,0,1,1,0,0,1,0,1,1,0,1],
+        [1,0,1,1,0,0,0,0,1,1,0,1],
         [1,0,1,0,0,0,0,0,0,1,0,1],
         [1,0,1,0,1,1,1,1,0,1,0,1],
         [1,0,0,0,1,0,0,1,0,0,0,1],
@@ -119,502 +120,340 @@ document.addEventListener("DOMContentLoaded", () => {
         [1,0,0,0,0,0,0,0,0,0,0,1],
         [1,1,1,1,1,1,1,1,1,1,1,1]
     ];
+    const mapSize = 12;
+    const wallGroup = new THREE.Group();
+    scene.add(wallGroup);
 
-    // Игрок
-    const player = {
-        x: 2.5, y: 2.5,
-        angle: 0,       
-        fov: Math.PI / 3, 
-        speed: 0.05,
-        rotSpeed: 0.003, // Для плавного обзора мышью
-        hp: 100,
-        kills: 0,
-        winKills: 15
-    };
+    // Создаем стены (адские кирпичные блоки)
+    const wallGeo = new THREE.BoxGeometry(2, 3, 2);
+    const wallMat = new THREE.MeshLambertMaterial({ color: 0x2b0d0d }); // Темно-красный кирпичный оттенок
+
+    for(let r=0; r<mapSize; r++) {
+        for(let c=0; c<mapSize; c++) {
+            if(map[r][c] === 1) {
+                const wall = new THREE.Mesh(wallGeo, wallMat);
+                wall.position.set(c * 2 - mapSize, 1.5, r * 2 - mapSize);
+                wallGroup.add(wall);
+            }
+        }
+    }
+
+    // Пол (Адская земля/Кровь)
+    const floorGeo = new THREE.PlaneGeometry(50, 50);
+    const floorMat = new THREE.MeshLambertMaterial({ color: 0x5e0000 }); // Кроваво-красный пол
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = 0;
+    scene.add(floor);
+
+    // Персонаж (Блочный человечек VERTBLOX а-ля Roblox)
+    const charGroup = new THREE.Group();
+    scene.add(charGroup);
+    charGroup.position.set(-8, 0.8, -8); // Стартовая позиция
+
+    const bodyMat = new THREE.MeshLambertMaterial({ color: 0x111111 }); // Черный торс
+    const limbMat = new THREE.MeshLambertMaterial({ color: 0xffd54f }); // Желтая кожа
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), limbMat);
+    head.position.y = 0.7;
+    charGroup.add(head);
+
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.3), bodyMat);
+    torso.position.y = 0.1;
+    charGroup.add(torso);
+
+    // Оружие в руке
+    const gun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 0.5), new THREE.MeshLambertMaterial({color: 0x555555}));
+    gun.position.set(0.4, 0.1, 0.2);
+    charGroup.add(gun);
+
+    // Состояние игры и управления
+    let keys = {};
+    let isShiftLocked = false;
+    let yaw = 0;   // Вращение камеры влево-вправо
+    let pitch = -0.3; // Наклон камеры вверх-вниз
 
     // Объекты на карте (Зомби и Бочки)
-    let entities = [
-        { type: 'zombie', x: 5.5, y: 3.5, active: true },
-        { type: 'zombie', x: 9.5, y: 5.5, active: true },
-        { type: 'zombie', x: 3.5, y: 8.5, active: true },
-        { type: 'barrel', x: 4.5, y: 4.5, active: true }, // Бочка
-        { type: 'barrel', x: 8.5, y: 8.5, active: true }  // Бочка
-    ];
+    let entities = [];
+    const entityGroup = new THREE.Group();
+    scene.add(entityGroup);
 
-    let keys = {};
-    let isShooting = false;
-    let shootAnim = 0;
-    let gameOver = false;
-    let gameWon = false;
-    let skyOffset = 0; // Для движения облаков
+    function spawnZombie(x, z) {
+        const zombie = new THREE.Group();
+        const zHead = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), new THREE.MeshLambertMaterial({color: 0x2e7d32}));
+        zHead.position.y = 0.7;
+        const zBody = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.3), new THREE.MeshLambertMaterial({color: 0x800c0c}));
+        zBody.position.y = 0.1;
+        zombie.add(zHead, zBody);
+        
+        zombie.position.set(x, 0.8, z);
+        zombie.userData = { type: 'zombie', hp: 100 };
+        entityGroup.add(zombie);
+        entities.push(zombie);
+    }
 
-    // Эффект взрыва (координаты и кадры)
-    let explosion = null;
+    function spawnBarrel(x, z) {
+        const barrel = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 0.9, 8),
+            new THREE.MeshLambertMaterial({color: 0xe65100}) // Оранжевые взрывоопасные бочки
+        );
+        barrel.position.set(x, 0.45, z);
+        barrel.userData = { type: 'barrel', hp: 1 };
+        entityGroup.add(barrel);
+        entities.push(barrel);
+    }
 
-    // ЗАХВАТ МЫШИ ДЛЯ ПК
+    // Спавним стартовых мобов и бочки
+    spawnZombie(0, 0);
+    spawnZombie(4, -4);
+    spawnZombie(-4, 4);
+    spawnBarrel(2, 2);
+    spawnBarrel(-2, -2);
+
+    // Клик по игровому экрану активирует Shift-Lock
     gameArea.addEventListener('click', () => {
-        if (!gameOver && !gameWon) {
-            canvas.requestPointerLock();
-        } else {
-            resetGame();
+        if (!isShiftLocked) {
+            container.requestPointerLock();
         }
     });
 
+    // Обработка блокировки мыши (Shift-Lock)
     document.addEventListener('pointerlockchange', () => {
-        if (document.pointerLockElement === canvas) {
-            document.addEventListener("mousemove", updateCameraWithMouse, false);
+        if (document.pointerLockElement === container) {
+            isShiftLocked = true;
+            crosshair.style.display = 'block';
+            slIndicator.textContent = 'SHIFT-LOCK: ON';
+            slIndicator.style.borderColor = '#00ff00';
+            slIndicator.style.color = '#00ff00';
         } else {
-            document.removeEventListener("mousemove", updateCameraWithMouse, false);
+            isShiftLocked = false;
+            crosshair.style.display = 'none';
+            slIndicator.textContent = 'SHIFT-LOCK: OFF (Press Shift / Click)';
+            slIndicator.style.borderColor = '#ff3333';
+            slIndicator.style.color = '#ff3333';
         }
     });
 
-    function updateCameraWithMouse(e) {
-        player.angle += e.movementX * player.rotSpeed;
+    // Вращение камеры мышкой
+    window.addEventListener('mousemove', (e) => {
+        if (isShiftLocked) {
+            yaw -= e.movementX * 0.003;
+            pitch -= e.movementY * 0.003;
+            pitch = Math.max(-Math.PI/3, Math.min(Math.PI/4, pitch)); // Ограничиваем наклон вверх-вниз
+        }
+    });
+
+    // Нажатие Shift переключает Shift-Lock
+    window.addEventListener('keydown', (e) => {
+        keys[e.key.toLowerCase()] = true;
+        if (e.key === 'Shift') {
+            if (isShiftLocked) {
+                document.exitPointerLock();
+            } else {
+                container.requestPointerLock();
+            }
+        }
+        if (e.key === ' ' || e.key === 'enter') {
+            shoot();
+        }
+    });
+    window.addEventListener('keyup', (e) => {
+        keys[e.key.toLowerCase()] = false;
+    });
+
+    // Стрельба (ЛКМ)
+    window.addEventListener('mousedown', (e) => {
+        if (isShiftLocked && e.button === 0) {
+            shoot();
+        }
+    });
+
+    function shoot() {
+        // Эффект выстрела
+        const flash = new THREE.PointLight(0xff9100, 3, 5);
+        flash.position.copy(charGroup.position).add(new THREE.Vector3(0, 1, 0));
+        scene.add(flash);
+        setTimeout(() => scene.remove(flash), 80);
+
+        // Расчет попадания с помощью Raycaster из центра камеры
+        const raycaster = new THREE.Raycaster();
+        const center = new THREE.Vector2(0, 0); // Стреляем четко в прицел
+        raycaster.setFromCamera(center, camera);
+
+        const intersects = raycaster.intersectObjects(entityGroup.children, true);
+        if (intersects.length > 0) {
+            let hitObj = intersects[0].object;
+            // Поднимаемся до корневого объекта сущности
+            while (hitObj.parent && hitObj.parent !== entityGroup) {
+                hitObj = hitObj.parent;
+            }
+
+            if (hitObj.userData) {
+                if (hitObj.userData.type === 'zombie') {
+                    // Уничтожаем зомби
+                    createExplosionEffect(hitObj.position, 0x2e7d32);
+                    entityGroup.remove(hitObj);
+                    entities = entities.filter(e => e !== hitObj);
+                    setTimeout(() => spawnZombie(Math.random()*10-5, Math.random()*10-5), 3000);
+                } 
+                else if (hitObj.userData.type === 'barrel') {
+                    // Бочка взрывается огнем!
+                    createExplosionEffect(hitObj.position, 0xff5722);
+                    
+                    // Наносим урон зомби вокруг бочки
+                    const bPos = hitObj.position;
+                    entities.forEach(ent => {
+                        if (ent.userData.type === 'zombie') {
+                            let d = ent.position.distanceTo(bPos);
+                            if (d < 4) {
+                                createExplosionEffect(ent.position, 0x2e7d32);
+                                entityGroup.remove(ent);
+                                entities = entities.filter(e => e !== ent);
+                                setTimeout(() => spawnZombie(Math.random()*10-5, Math.random()*10-5), 3000);
+                            }
+                        }
+                    });
+
+                    entityGroup.remove(hitObj);
+                    entities = entities.filter(e => e !== hitObj);
+                    setTimeout(() => spawnBarrel(Math.random()*10-5, Math.random()*10-5), 6000);
+                }
+            }
+        }
     }
 
-    // Обработка стрельбы мышкой на ПК
-    canvas.addEventListener('mousedown', (e) => {
-        if (document.pointerLockElement === canvas && e.button === 0) {
-            triggerShoot();
-        }
-    });
+    // Визуальные пиксельные искры при взрыве/попадании
+    function createExplosionEffect(position, colorHex) {
+        const particleCount = 15;
+        const geometry = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+        const material = new THREE.MeshBasicMaterial({color: colorHex});
+        const particles = [];
 
-    // Управление джойстиком (телефон)
-    const joystick = document.getElementById('joystick');
-    const stick = document.getElementById('stick');
-    let joyX = 0, joyY = 0;
-    let isJoyActive = false;
-
-    joystick.addEventListener('touchstart', (e) => {
-        isJoyActive = true;
-        moveStick(e.touches[0]);
-    }, { passive: true });
-
-    window.addEventListener('touchmove', (e) => {
-        if (!isJoyActive) return;
-        moveStick(e.touches[0]);
-    }, { passive: true });
-
-    window.addEventListener('touchend', () => {
-        isJoyActive = false;
-        stick.style.transform = 'translate(0px, 0px)';
-        joyX = 0; joyY = 0;
-    });
-
-    function moveStick(touch) {
-        const rect = joystick.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        let dx = touch.clientX - centerX;
-        let dy = touch.clientY - centerY;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        const maxDist = 45;
-
-        if (dist > maxDist) {
-            dx = (dx / dist) * maxDist;
-            dy = (dy / dist) * maxDist;
+        for(let i=0; i<particleCount; i++) {
+            const part = new THREE.Mesh(geometry, material);
+            part.position.copy(position);
+            scene.add(part);
+            particles.push({
+                mesh: part,
+                vel: new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.2,
+                    (Math.random()) * 0.2,
+                    (Math.random() - 0.5) * 0.2
+                )
+            });
         }
 
-        stick.style.transform = `translate(${dx}px, ${dy}px)`;
-        joyX = dx / maxDist;
-        joyY = dy / maxDist;
-    }
-
-    const fireBtn = document.getElementById('shootBtn');
-    fireBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        triggerShoot();
-    }, { passive: false });
-
-    window.addEventListener('keydown', e => { 
-        keys[e.key.toLowerCase()] = true; 
-        if (e.key === ' ') triggerShoot(); 
-    });
-    window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
-
-    function triggerShoot() {
-        if (gameOver || gameWon) { resetGame(); return; }
-        if (!isShooting) {
-            isShooting = true;
-            shootAnim = 5;
-
-            // Луч попадания по центру экрана
-            let hitEntity = null;
-            let minDist = 999;
-            
-            entities.forEach(ent => {
-                if (!ent.active) return;
-                let dx = ent.x - player.x;
-                let dy = ent.y - player.y;
-                let angleToEnt = Math.atan2(dy, dx) - player.angle;
-                
-                while (angleToEnt < -Math.PI) angleToEnt += Math.PI * 2;
-                while (angleToEnt > Math.PI) angleToEnt -= Math.PI * 2;
-
-                if (Math.abs(angleToEnt) < 0.15) { 
-                    let d = Math.sqrt(dx*dx + dy*dy);
-                    if (d < minDist) {
-                        minDist = d;
-                        hitEntity = ent;
-                    }
+        const anim = () => {
+            let active = false;
+            particles.forEach(p => {
+                p.mesh.position.add(p.vel);
+                p.vel.y -= 0.01; // Гравитация на частицы
+                p.mesh.scale.subScalar(0.02);
+                if (p.mesh.scale.x > 0) {
+                    active = true;
+                } else {
+                    scene.remove(p.mesh);
                 }
             });
+            if (active) requestAnimationFrame(anim);
+        };
+        anim();
+    }
 
-            if (hitEntity) {
-                if (hitEntity.type === 'zombie') {
-                    hitEntity.active = false;
-                    player.kills++;
-                    if (player.kills >= player.winKills) gameWon = true;
-                    setTimeout(() => spawnNewEntity('zombie'), 2000);
-                } else if (hitEntity.type === 'barrel') {
-                    // Взрыв бочки!
-                    hitEntity.active = false;
-                    triggerExplosion(hitEntity.x, hitEntity.y);
-                    setTimeout(() => spawnNewEntity('barrel'), 5000);
-                }
+    // Логика перемещения персонажа с учетом коллизий со стенами
+    function movePlayer(dx, dz) {
+        const nextX = charGroup.position.x + dx;
+        const nextZ = charGroup.position.z + dz;
+
+        // Переводим 3D координаты обратно во внутреннюю сетку карты
+        const gridX = Math.floor((nextX + mapSize) / 2);
+        const gridZ = Math.floor((nextZ + mapSize) / 2);
+
+        if (gridX >= 0 && gridX < mapSize && gridZ >= 0 && gridZ < mapSize) {
+            if (map[gridZ][gridX] === 0) {
+                charGroup.position.x = nextX;
+                charGroup.position.z = nextZ;
             }
         }
     }
 
-    function triggerExplosion(bx, by) {
-        explosion = { x: bx, y: by, size: 0, max: 20 };
-        // Наносим урон зомби вокруг бочки
+    // Основной цикл обновления
+    const clock = new THREE.Clock();
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        const delta = clock.getDelta();
+
+        // 1. Физика бега персонажа
+        let moveX = 0;
+        let moveZ = 0;
+        const speed = 4 * delta;
+
+        if (keys['w'] || keys['arrowup']) moveZ = -speed;
+        if (keys['s'] || keys['arrowdown']) moveZ = speed;
+        if (keys['a'] || keys['arrowleft']) moveX = -speed;
+        if (keys['d'] || keys['arrowright']) moveX = speed;
+
+        // Направление движения относительно ракурса камеры
+        if (moveX !== 0 || moveZ !== 0) {
+            const camDirX = Math.sin(yaw);
+            const camDirZ = Math.cos(yaw);
+
+            // Движение вперед/назад и стрейф влево/вправо
+            const finalDx = (moveX * camDirZ + moveZ * camDirX);
+            const finalDz = (-moveX * camDirX + moveZ * camDirZ);
+
+            movePlayer(finalDx, finalDz);
+
+            // Поворот персонажа в сторону движения (если не залочен Shift-Lock)
+            if (!isShiftLocked) {
+                const angle = Math.atan2(-finalDx, -finalDz);
+                charGroup.rotation.y = angle;
+            }
+        }
+
+        // В режиме Shift-Lock персонаж всегда повернут спиной к камере (смотрит куда и прицел)
+        if (isShiftLocked) {
+            charGroup.rotation.y = yaw + Math.PI;
+        }
+
+        // 2. Движение зомби к игроку
         entities.forEach(ent => {
-            if (ent.type === 'zombie' && ent.active) {
-                let dist = Math.sqrt((ent.x - bx)**2 + (ent.y - by)**2);
-                if (dist < 2.5) {
-                    ent.active = false;
-                    player.kills++;
-                    if (player.kills >= player.winKills) gameWon = true;
-                    setTimeout(() => spawnNewEntity('zombie'), 2000);
-                }
-            }
-        });
-    }
-
-    function spawnNewEntity(type) {
-        if (gameOver || gameWon) return;
-        let rx, ry;
-        do {
-            rx = Math.floor(Math.random() * (mapSize - 2)) + 1;
-            ry = Math.floor(Math.random() * (mapSize - 2)) + 1;
-        } while (map[ry][rx] === 1 || Math.sqrt((rx - player.x)**2 + (ry - player.y)**2) < 3);
-
-        entities.push({ type: type, x: rx + 0.5, y: ry + 0.5, active: true });
-    }
-
-    function resetGame() {
-        player.x = 2.5; player.y = 2.5; player.angle = 0; player.hp = 100; player.kills = 0;
-        entities = [
-            { type: 'zombie', x: 5.5, y: 3.5, active: true },
-            { type: 'zombie', x: 9.5, y: 5.5, active: true },
-            { type: 'zombie', x: 3.5, y: 8.5, active: true },
-            { type: 'barrel', x: 4.5, y: 4.5, active: true },
-            { type: 'barrel', x: 8.5, y: 8.5, active: true }
-        ];
-        gameOver = false; gameWon = false;
-    }
-
-    function update() {
-        if (gameOver || gameWon) return;
-
-        // Плывущие облака
-        skyOffset += 0.2;
-
-        let moveStep = 0;
-        let rotStep = 0;
-
-        // Движение WASD / Стрелки
-        if (keys['w']) moveStep = player.speed;
-        if (keys['s']) moveStep = -player.speed;
-        if (keys['a']) {
-            // Стрэйф влево
-            let strafeAngle = player.angle - Math.PI / 2;
-            let newX = player.x + Math.cos(strafeAngle) * player.speed;
-            let newY = player.y + Math.sin(strafeAngle) * player.speed;
-            if (map[Math.floor(player.y)][Math.floor(newX)] === 0) player.x = newX;
-            if (map[Math.floor(newY)][Math.floor(player.x)] === 0) player.y = newY;
-        }
-        if (keys['d']) {
-            // Стрэйф вправо
-            let strafeAngle = player.angle + Math.PI / 2;
-            let newX = player.x + Math.cos(strafeAngle) * player.speed;
-            let newY = player.y + Math.sin(strafeAngle) * player.speed;
-            if (map[Math.floor(player.y)][Math.floor(newX)] === 0) player.x = newX;
-            if (map[Math.floor(newY)][Math.floor(player.x)] === 0) player.y = newY;
-        }
-
-        // Поворот клавишами (если нет захвата мыши)
-        if (keys['arrowleft']) player.angle -= 0.04;
-        if (keys['arrowright']) player.angle += 0.04;
-
-        // Управление с джойстика на телефоне
-        if (isJoyActive) {
-            moveStep = -joyY * player.speed * 1.5;
-            player.angle += joyX * 0.05;
-        }
-
-        // Вычисление новой позиции по направлению взгляда
-        let newX = player.x + Math.cos(player.angle) * moveStep;
-        let newY = player.y + Math.sin(player.angle) * moveStep;
-
-        if (map[Math.floor(player.y)][Math.floor(newX)] === 0) player.x = newX;
-        if (map[Math.floor(newY)][Math.floor(player.x)] === 0) player.y = newY;
-
-        // Преследование игрока зомби
-        entities.forEach(ent => {
-            if (ent.type !== 'zombie' || !ent.active) return;
-            let dx = player.x - ent.x;
-            let dy = player.y - ent.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            
-            if (dist > 0.3) {
-                ent.x += (dx / dist) * 0.018;
-                ent.y += (dy / dist) * 0.018;
-            } else {
-                player.hp -= 0.8;
-                if (player.hp <= 0) {
-                    player.hp = 0;
-                    gameOver = true;
-                    document.exitPointerLock();
-                }
+            if (ent.userData.type === 'zombie') {
+                const dir = new THREE.Vector3().subVectors(charGroup.position, ent.position);
+                dir.y = 0;
+                dir.normalize();
+                ent.position.addScaledVector(dir, 1.2 * delta);
+                ent.lookAt(charGroup.position.x, ent.position.y, charGroup.position.z);
             }
         });
 
-        if (isShooting) {
-            shootAnim--;
-            if (shootAnim <= 0) isShooting = false;
-        }
+        // 3. Позиционирование камеры от третьего лица (Roblox-style)
+        // Камера висит за спиной персонажа на расстоянии 4.5 метров
+        const offsetDist = 4.5;
+        const camX = charGroup.position.x - offsetDist * Math.sin(yaw) * Math.cos(pitch);
+        const camY = charGroup.position.y + 1.2 + offsetDist * Math.sin(-pitch);
+        const camZ = charGroup.position.z - offsetDist * Math.cos(yaw) * Math.cos(pitch);
 
-        if (explosion) {
-            explosion.size++;
-            if (explosion.size > explosion.max) explosion = null;
-        }
+        camera.position.set(camX, camY, camZ);
+        
+        // Камера смотрит прямо на уровень шеи/головы персонажа
+        const lookTarget = charGroup.position.clone().add(new THREE.Vector3(0, 0.5, 0));
+        camera.lookAt(lookTarget);
+
+        renderer.render(scene, camera);
     }
 
-    // Raycasting рендер
-    function draw() {
-        // 1. АДСКОЕ НЕБО С ОБЛАКАМИ
-        ctx.fillStyle = '#1a0000'; // Багровый закат
-        ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
+    animate();
 
-        // Облака
-        ctx.fillStyle = 'rgba(60, 10, 10, 0.6)';
-        for (let i = 0; i < 4; i++) {
-            let cx = ((i * 150 + skyOffset) % (canvas.width + 100)) - 50;
-            ctx.fillRect(cx, 15, 60, 15);
-            ctx.fillRect(cx + 10, 8, 40, 10);
-        }
-
-        // 2. КРОВАВЫЙ АДСКИЙ ПОЛ (СЕТКА/ПЛИТКА)
-        ctx.fillStyle = '#4a0000'; // Кроваво-красная земля
-        ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
-
-        // Горизонтальные кровавые стыки (перспектива)
-        ctx.fillStyle = '#000000';
-        for (let y = canvas.height / 2; y < canvas.height; y += 12) {
-            ctx.fillRect(0, y, canvas.width, 1);
-        }
-
-        const numRays = canvas.width;
-        let zBuffer = [];
-
-        for (let i = 0; i < numRays; i++) {
-            let rayAngle = (player.angle - player.fov / 2) + (i / numRays) * player.fov;
-            let distanceToWall = 0;
-            let hitWall = false;
-
-            let eyeX = Math.cos(rayAngle);
-            let eyeY = Math.sin(rayAngle);
-
-            while (!hitWall && distanceToWall < 16) {
-                distanceToWall += 0.05;
-                let testX = Math.floor(player.x + eyeX * distanceToWall);
-                let testY = Math.floor(player.y + eyeY * distanceToWall);
-
-                if (testX < 0 || testX >= mapSize || testY < 0 || testY >= mapSize) {
-                    hitWall = true;
-                    distanceToWall = 16;
-                } else if (map[testY][testX] > 0) {
-                    hitWall = true;
-                }
-            }
-
-            let correctedDist = distanceToWall * Math.cos(rayAngle - player.angle);
-            zBuffer[i] = correctedDist;
-
-            let wallHeight = Math.min(canvas.height, (canvas.height / correctedDist));
-            
-            // Текстура стены (Черный кирпич в инфернальном свете)
-            let colorVal = Math.max(10, Math.min(120, 120 - correctedDist * 8));
-            ctx.strokeStyle = `rgb(${colorVal}, ${colorVal * 0.2}, ${colorVal * 0.2})`; // Багровые стены
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(i, (canvas.height - wallHeight) / 2);
-            ctx.lineTo(i, (canvas.height + wallHeight) / 2);
-            ctx.stroke();
-        }
-
-        // Сортировка объектов по расстоянию для правильного рендеринга
-        let renderedEntities = entities.map(e => {
-            let dx = e.x - player.x;
-            let dy = e.y - player.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            return { ent: e, dist: dist, dx: dx, dy: dy };
-        }).sort((a, b) => b.dist - a.dist);
-
-        // Отрисовка объектов (Зомби, Бочки, Взрывы)
-        renderedEntities.forEach(item => {
-            let ent = item.ent;
-            if (!ent.active) return;
-
-            let angleToEnt = Math.atan2(item.dy, item.dx) - player.angle;
-            while (angleToEnt < -Math.PI) angleToEnt += Math.PI * 2;
-            while (angleToEnt > Math.PI) angleToEnt -= Math.PI * 2;
-
-            if (Math.abs(angleToEnt) < player.fov / 1.3 && item.dist > 0.2) {
-                let screenX = (canvas.width / 2) + Math.tan(angleToEnt) * (canvas.width / 2);
-                let size = canvas.height / item.dist;
-
-                if (screenX >= 0 && screenX < canvas.width && zBuffer[Math.floor(screenX)] > item.dist) {
-                    
-                    if (ent.type === 'zombie') {
-                        // Кровавая тень под зомби
-                        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-                        ctx.fillRect(screenX - size/4, (canvas.height/2) + size/3, size/2, 8);
-
-                        // Зомби
-                        ctx.fillStyle = '#1e4620'; // Темно-зеленая гнилая плоть
-                        ctx.fillRect(screenX - size/6, (canvas.height - size)/2 + size/4, size/3, size/2);
-                        
-                        // Кровавая рубаха
-                        ctx.fillStyle = '#800c0c';
-                        ctx.fillRect(screenX - size/6, (canvas.height - size)/2 + size/3, size/3, size/4);
-
-                        // Голова
-                        ctx.fillStyle = '#558b2f';
-                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2, size/4, size/4);
-                        
-                        // Глаза
-                        ctx.fillStyle = '#ff1744';
-                        ctx.fillRect(screenX - size/12, (canvas.height - size)/2 + 4, 3, 3);
-                        ctx.fillRect(screenX + size/24, (canvas.height - size)/2 + 4, 3, 3);
-                    } 
-                    else if (ent.type === 'barrel') {
-                        // Металлическая бочка (серо-оранжевая)
-                        ctx.fillStyle = '#37474f';
-                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2 + size/4, size/4, size/2.2);
-
-                        // Оранжевая полоса (огнеопасно!)
-                        ctx.fillStyle = '#ff6d00';
-                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2 + size/2.5, size/4, size/10);
-
-                        // Ребра жесткости бочки
-                        ctx.fillStyle = '#212121';
-                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2 + size/4, size/4, 4);
-                        ctx.fillRect(screenX - size/8, (canvas.height - size)/2 + size/1.6, size/4, 4);
-                    }
-                }
-            }
-        });
-
-        // Отрисовка взрыва на экране (если есть)
-        if (explosion) {
-            let edx = explosion.x - player.x;
-            let edy = explosion.y - player.y;
-            let edist = Math.sqrt(edx*edx + edy*edy);
-            let eAngle = Math.atan2(edy, edx) - player.angle;
-            while (eAngle < -Math.PI) eAngle += Math.PI * 2;
-            while (eAngle > Math.PI) eAngle -= Math.PI * 2;
-
-            if (Math.abs(eAngle) < player.fov / 1.3 && edist > 0.2) {
-                let screenX = (canvas.width / 2) + Math.tan(eAngle) * (canvas.width / 2);
-                let size = (canvas.height / edist) * (explosion.size / 10);
-                
-                ctx.fillStyle = `rgba(255, ${200 - explosion.size * 8}, 0, ${1 - explosion.size / explosion.max})`;
-                ctx.beginPath();
-                ctx.arc(screenX, canvas.height / 2, size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // Прицел
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.fillRect(canvas.width / 2 - 5, canvas.height / 2 - 1, 10, 2);
-        ctx.fillRect(canvas.width / 2 - 1, canvas.height / 2 - 5, 2, 10);
-
-        // Рука/оружие с анимацией отката
-        let oY = isShooting ? 15 : 0;
-        ctx.fillStyle = '#37474f';
-        ctx.fillRect(canvas.width / 2 - 12, canvas.height - 60 + oY, 24, 60);
-        ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(canvas.width / 2 - 4, canvas.height - 85 + oY, 8, 45);
-
-        if (isShooting) {
-            // Вспышка дульного пламени
-            ctx.fillStyle = '#ff9100';
-            ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height - 90, 16, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ffff00';
-            ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height - 90, 8, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // HUD интерфейс
-        ctx.fillStyle = '#ff1744';
-        ctx.font = 'bold 12px Arial';
-        ctx.fillText(`KILLS: ${player.kills} / ${player.winKills}`, 15, 20);
-        ctx.fillText(`HP: ${Math.floor(player.hp)}%`, 15, 35);
-
-        // Экран конца игры
-        if (gameWon) {
-            ctx.fillStyle = 'rgba(0,0,0,0.85)';
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = '#00ff00';
-            ctx.font = 'bold 24px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText("VICTORY!", canvas.width/2, canvas.height/2);
-            ctx.fillStyle = '#fff';
-            ctx.font = '12px Arial';
-            ctx.fillText("You purged the underworld!", canvas.width/2, canvas.height/2 + 25);
-            ctx.fillText("Click here to play again", canvas.width/2, canvas.height/2 + 50);
-            ctx.textAlign = 'left';
-        }
-
-        if (gameOver) {
-            ctx.fillStyle = 'rgba(0,0,0,0.85)';
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = '#ff0000';
-            ctx.font = 'bold 24px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText("YOU WERE CONSUMED!", canvas.width/2, canvas.height/2);
-            ctx.fillStyle = '#fff';
-            ctx.font = '12px Arial';
-            ctx.fillText("Click here to respawn", canvas.width/2, canvas.height/2 + 25);
-            ctx.textAlign = 'left';
-        }
-    }
-
-    function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
-    }
-    loop();
+    // Адаптивность размера
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
 });
-
-function toggleFullscreen() {
-    const gameArea = document.getElementById('gameArea');
-    if (!document.fullscreenElement) {
-        gameArea.requestFullscreen().catch(err => {
-            alert(`Ошибка входа в полный экран: ${err.message}`);
-        });
-    } else {
-        document.exitFullscreen();
-    }
-}
 </script>
 </body>
 </html>
