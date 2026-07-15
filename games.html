@@ -3,57 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VERTBLOX: Games</title>
+    <title>VERTBLOX - Игры</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .GameCard {
-            border: 1px solid #7795bd;
-            background-color: #e2ebf5;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: flex;
+        .GamesGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 15px;
-            align-items: center;
+            margin-top: 15px;
         }
-        .GameThumb {
-            width: 120px;
-            height: 90px;
-            background-color: #000;
-            border: 2px solid #002277;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
+        .GameCard {
+            background-color: #f6f9fc;
+            border: 1px solid #7795bd;
+            padding: 10px;
             text-align: center;
+            border-radius: 4px;
         }
-        .GameInfo {
-            flex-grow: 1;
-        }
-        .GameTitle {
-            font-size: 16px;
-            font-weight: bold;
-            color: #0055c5;
-            text-decoration: none;
-        }
-        .GameTitle:hover {
-            text-decoration: underline;
-        }
+        .GameCard h3 { margin: 10px 0 5px 0; color: #002277; font-size: 14px; }
+        .GameCard p { font-size: 11px; color: #555; height: 35px; overflow: hidden; margin-bottom: 10px; }
         .PlayBtn {
-            background: #ff9900 linear-gradient(to bottom, #ffb84d, #e68a00);
-            border: 1px solid #cc7a00;
-            color: white !important;
-            padding: 8px 20px;
+            display: inline-block;
+            background: #e1ebf5 linear-gradient(to bottom, #ffffff, #cedbe8);
+            border: 1px solid #7795bd;
+            color: #002277;
+            padding: 5px 15px;
             font-weight: bold;
             text-decoration: none;
-            font-size: 14px;
-            box-shadow: 0 2px 0 #cc7a00;
+            font-size: 11px;
             border-radius: 3px;
-        }
-        .PlayBtn:active {
-            transform: translateY(1px);
-            box-shadow: none;
         }
     </style>
 </head>
@@ -61,50 +38,39 @@
 <div id="Container">
     <div id="Header">
         <a href="index.html" class="LogoContainer"><span class="LogoText">VERTBLOX</span></a>
-        <div class="AuthStatus">
-            Logged in as: <a href="avatar.html" style="font-weight: bold;">4444_F</a><br>
-            <a href="avatar.html">My Character</a> | <a href="#">Logout</a>
-        </div>
+        <div class="AuthStatus">Logged in as: <a href="avatar.html">4444_F</a></div>
     </div>
-
     <div id="NavigationBar">
         <a href="index.html">Home</a>
         <a href="games.html" class="active">Games</a>
-        <a href="avatar.html">Avatar</a>
-        <a href="#">Catalog</a>
-        <a href="#">Forum</a>
     </div>
-
     <div id="MainBody">
         <div id="RightColumn" style="width: 100%;">
-            <h2>User Created Games</h2>
+            <h2 style="color: #002277; border-bottom: 2px solid #002277; padding-bottom: 5px;">Игры VERTBLOX</h2>
             
-            <div class="GameCard">
-                <div class="GameThumb" style="background: linear-gradient(45deg, #112233, #3e2723); color: #ff4081;">3D CASTLE</div>
-                <div class="GameInfo">
-                    <a href="castle.html" class="GameTitle">Castle Defense 3D</a>
-                    <p style="margin: 5px 0; font-size: 11px; color: #555;">Спаси принцессу в 3D! Отбивайся от наступающих зомби лазерами. Теперь они охотятся лично за тобой!</p>
-                    <span style="font-size: 10px; color: #777;">Creator: <b>4444_F</b></span>
+            <div class="GamesGrid">
+                <!-- Игра 1 -->
+                <div class="GameCard">
+                    <h3>Zombie Shooter 3D (FPS)</h3>
+                    <p>Погружение от первого лица! Отстреливайся от зомби на крыше замка с помощью джойстика.</p>
+                    <a href="zombie3d.html" class="PlayBtn">ИГРАТЬ</a>
                 </div>
-                <a href="castle.html" class="PlayBtn">PLAY</a>
-            </div>
 
-            <div class="GameCard">
-                <div class="GameThumb" style="background: linear-gradient(45deg, #0055c5, #a1887f); color: #ffd700;">DOMESTOS</div>
-                <div class="GameInfo">
-                    <a href="angry.html" class="GameTitle">Domestos Birds</a>
-                    <p style="margin: 5px 0; font-size: 11px; color: #555;">Запускай дезинфицирующий Доместос из рогатки, чтобы уничтожить коварные какашки на блоках!</p>
-                    <span style="font-size: 10px; color: #777;">Creator: <b>4444_F</b></span>
+                <!-- Игра 2 -->
+                <div class="GameCard">
+                    <h3>Domestos Birds</h3>
+                    <p>Заряди бутылку Доместоса в рогатку и очисти арену от вредителей за 4 попытки с бустами!</p>
+                    <a href="angry.html" class="PlayBtn">ИГРАТЬ</a>
                 </div>
-                <a href="angry.html" class="PlayBtn">PLAY</a>
-            </div>
 
+                <!-- Игра 3 -->
+                <div class="GameCard">
+                    <h3>3D Parkour кубика</h3>
+                    <p>Прыгай по парящим трехмерным блокам с мобильным круговым джойстиком. Дойди до золотого финиша!</p>
+                    <a href="parkour.html" class="PlayBtn">ИГРАТЬ</a>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <div id="Footer">
-        <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a>
-        <div class="Disclaimer">VERTBLOX © 2010 - 2026.</div>
     </div>
 </div>
 </body>
