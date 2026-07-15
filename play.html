@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>VERTBLOX: Player</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .GameContainerBox {
+            border: 1px solid #7795bd;
+            background-color: #f6f9fc;
+            padding: 15px;
+            text-align: center;
+        }
+        .GameHeader {
+            font-size: 18px;
+            font-weight: bold;
+            color: #002277;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+        .GameCreatorSub {
+            font-size: 11px;
+            color: #555;
+            text-align: left;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #7795bd;
+            padding-bottom: 5px;
+        }
+        /* Игровое поле */
+        canvas {
+            background-color: #a5cbf5; /* Цвет неба */
+            border: 3px solid #002277;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .ControlsHelp {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #333;
+            background-color: #fff;
+            padding: 8px;
+            border: 1px dashed #7795bd;
+            display: inline-block;
+            border-radius: 4px;
+        }
+        .BackBtn {
+            margin-top: 15px;
+            display: inline-block;
+            background: #e1ebf5 linear-gradient(to bottom, #ffffff, #cedbe8);
+            border: 1px solid #7795bd;
+            color: #002277;
+            padding: 5px 15px;
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        .BackBtn:hover {
+            background: #cedbe8;
+        }
+    </style>
+</head>
+<body>
+
+<div id="Container">
+    <div id="Header">
+        <a href="index.html" class="LogoContainer"><span class="LogoText">VERTBLOX</span></a>
+        <div class="AuthStatus">
+            Logged in as: <a href="avatar.html" style="font-weight: bold;">4444_F</a><br>
+            <a href="avatar.html">My Character</a> | <a href="#">Logout</a>
+        </div>
+    </div>
+
+    <div id="NavigationBar">
+        <a href="index.html">Home</a>
+        <a href="games.html" class="active">Games</a>
+        <a href="avatar.html">Avatar</a>
+        <a href="#">Catalog</a>
+        <a href="#">Forum</a>
+    </div>
+
+    <div id="MainBody">
+        <div id="LeftColumn">
+            <div class="WidgetBox">
+                <h3>Place Info</h3>
+                <div style="font-size: 11px; line-height: 1.5;">
+                    <strong>Visits:</strong> 1,204<br>
+                    <strong>Created:</strong> 2010<br>
+                    <strong>Max Players:</strong> 12
+                </div>
+            </div>
+        </div>
+
+        <div id="RightColumn">
+            <div class="GameContainerBox">
+                <div class="GameHeader" id="gameTitle">Classic Crossroads</div>
+                <div class="GameCreatorSub">Creator: <strong style="color: #0055c5;">VERTBLOX</strong></div>
+                
+                <canvas id="gameCanvas" width="600" height="350"></canvas>
+                
+                <div class="ControlsHelp">
+                    <strong>Управление:</strong> Стрелочки влево/вправо (или <b>A / D</b>) — движение. Стрелочка вверх (или <b>W / Space</b>) — прыжок.
+                </div>
+                <br>
+                <a href="games.html" class="BackBtn">← Вернуться к списку игр</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="Footer">
+        <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a>
+        <div class="Disclaimer">VERTBLOX © 2010 - 2026. This site is created for creative gaming.</div>
+    </div>
+</div>
+
+<script>
+    // Получаем параметры из URL (какую игру запустить)
+    const urlParams = new URLSearchParams(window.location.search);
+    const placeName = urlParams.get('place') || 'Classic Crossroads';
+    document.getElementById('gameTitle').innerText = placeName;
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Настройки игрока
+    const player = {
+        x: 50,
+        y: 200,
+        width: 24,
+        height: 38,
+        vx: 0,
+        vy: 0,
+        speed: 3.5,
+        jumpForce: 8,
+        grounded: false,
+        // Цвета по умолчанию (как у аватара)
+        colors: {
+            skin: '#fcd303',
+            torso: '#2d2d2d',
+            legs: '#151515'
+        }
+    };
+
+    // Гравитация и окружение
+    const gravity = 0.35;
+    const platforms = [
+        { x: 0, y: 310, width: 600, height: 40, color: '#4caf50' },   // Земля (зеленая трава)
+        { x: 150, y: 240, width: 120, height: 15, color: '#e0e0e0' }, // Платформы серого кирпича
+        { x: 350, y: 180, width: 120, height: 15, color: '#e0e0e0' },
+        { x: 100, y: 130, width: 100, height: 15, color: '#e0e0e0' }
+    ];
+
+    // Монетки / Желтые блоки для сбора
+    let coins = [
+        { x: 200, y: 210, radius: 6, collected: false },
+        { x: 410, y: 150, radius: 6, collected: false },
+        { x: 140, y: 100, radius: 6, collected: false }
+    ];
+
+    let score = 0;
+
+    // Считывание управления
+    const keys = {};
+    window.addEventListener('keydown', e => { keys[e.key] = true; });
+    window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    function update() {
+        // Движение по горизонтали
+        if (keys['ArrowRight'] || keys['d'] || keys['D'] || keys['в'] || keys['В']) {
+            player.vx = player.speed;
+        } else if (keys['ArrowLeft'] || keys['a'] || keys['A'] || keys['ф'] || keys['Ф']) {
+            player.vx = -player.speed;
+        } else {
+            player.vx = 0;
+        }
+
+        // Прыжок
+        if ((keys['ArrowUp'] || keys['w'] || keys['W'] || keys[' '] || keys['ц'] || keys['Ц']) && player.grounded) {
+            player.vy = -player.jumpForce;
+            player.grounded = false;
+        }
+
+        // Применение гравитации
+        player.vy += gravity;
+
+        // Обновление координат
+        player.x += player.vx;
+        player.y += player.vy;
+
+        // Границы экрана по бокам
+        if (player.x < 0) player.x = 0;
+        if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+        // Проверка столкновений с платформами
+        player.grounded = false;
+        for (let plat of platforms) {
+            if (player.x < plat.x + plat.width &&
+                player.x + player.width > plat.x &&
+                player.y + player.height >= plat.y &&
+                player.y + player.height - player.vy <= plat.y + 10) {
+                
+                player.y = plat.y - player.height;
+                player.vy = 0;
+                player.grounded = true;
+            }
+        }
+
+        // Сбор монеток
+        for (let coin of coins) {
+            if (!coin.collected) {
+                let pCenterX = player.x + player.width / 2;
+                let pCenterY = player.y + player.height / 2;
+                let dist = Math.hypot(pCenterX - coin.x, pCenterY - coin.y);
+                if (dist < player.width / 2 + coin.radius) {
+                    coin.collected = true;
+                    score += 10;
+                }
+            }
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 1. Рисуем небо и солнце
+        ctx.fillStyle = '#ffeb3b';
+        ctx.beginPath();
+        ctx.arc(520, 50, 25, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Рисуем платформы
+        for (let plat of platforms) {
+            ctx.fillStyle = plat.color;
+            ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+            // Черная обводка блоков
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(plat.x, plat.y, plat.width, plat.height);
+        }
+
+        // 3. Рисуем монетки (желтые классические детальки)
+        for (let coin of coins) {
+            if (!coin.collected) {
+                ctx.fillStyle = '#fcd303';
+                ctx.strokeStyle = '#cc9900';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        // 4. Рисуем блочного игрока
+        // Ноги
+        ctx.fillStyle = player.colors.legs;
+        ctx.fillRect(player.x + 2, player.y + 26, 9, 12);
+        ctx.fillRect(player.x + 13, player.y + 26, 9, 12);
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(player.x + 2, player.y + 26, 9, 12);
+        ctx.strokeRect(player.x + 13, player.y + 26, 9, 12);
+
+        // Торс
+        ctx.fillStyle = player.colors.torso;
+        ctx.fillRect(player.x + 2, player.y + 12, 20, 14);
+        ctx.strokeRect(player.x + 2, player.y + 12, 20, 14);
+
+        // Голова
+        ctx.fillStyle = player.colors.skin;
+        ctx.fillRect(player.x + 6, player.y, 12, 12);
+        ctx.strokeRect(player.x + 6, player.y, 12, 12);
+
+        // Лицо (глаза и улыбка)
+        ctx.fillStyle = '#000';
+        ctx.fillRect(player.x + 8, player.y + 3, 2, 2);
+        ctx.fillRect(player.x + 14, player.y + 3, 2, 2);
+        ctx.beginPath();
+        ctx.arc(player.x + 12, player.y + 8, 3, 0, Math.PI, false);
+        ctx.stroke();
+
+        // 5. Очки (Интерфейс)
+        ctx.fillStyle = '#002277';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('Score: ' + score + ' VB', 15, 25);
+    }
+
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+</script>
+</body>
+</html>
