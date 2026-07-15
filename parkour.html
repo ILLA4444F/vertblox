@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VERTBLOX: 3D Parkour</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { touch-action: none; background-color: #e3f2fd; }
+        .GameContainerBox { border: 1px solid #0d47a1; background-color: #f6f9fc; padding: 10px; text-align: center; }
+        .GameHeader { font-size: 18px; font-weight: bold; color: #0d47a1; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        
+        .CanvasWrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; background: #90caf9; }
+        canvas { background-color: #80deea; border: 3px solid #0d47a1; display: block; width: 100%; height: auto; }
+
+        .FullscreenBtn { background: #0d47a1; color: white; border: none; padding: 5px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 3px; }
+
+        /* Джойстик для бега */
+        .JoystickContainer {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(13, 71, 161, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .JoystickStick {
+            width: 40px;
+            height: 40px;
+            background: rgba(13, 71, 161, 0.7);
+            border: 2px solid #fff;
+            border-radius: 50%;
+        }
+
+        /* Кнопка Прыжка */
+        .JumpButton {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 152, 0, 0.7);
+            border: 2px solid #e65100;
+            border-radius: 50%;
+            color: #fff;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .ControlsHelp { margin-top: 10px; font-size: 11px; background-color: #fff; padding: 6px; border: 1px dashed #0d47a1; display: inline-block; }
+        .BackBtn { margin-top: 15px; display: inline-block; background: #e1ebf5 linear-gradient(to bottom, #ffffff, #cedbe8); border: 1px solid #7795bd; color: #002277; padding: 6px 15px; font-weight: bold; text-decoration: none; font-size: 11px; }
+    </style>
+</head>
+<body>
+<div id="Container">
+    <div id="Header">
+        <a href="index.html" class="LogoContainer"><span class="LogoText">VERTBLOX</span></a>
+        <div class="AuthStatus">Logged in as: <a href="avatar.html">4444_F</a></div>
+    </div>
+    <div id="MainBody">
+        <div class="GameContainerBox">
+            <div class="GameHeader">
+                <span>VERTBLOX 3D PARKOUR</span>
+                <button class="FullscreenBtn" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
+            </div>
+
+            <div class="CanvasWrapper" id="gameArea">
+                <canvas id="parkourCanvas" width="500" height="350"></canvas>
+                
+                <!-- Левый Стик -->
+                <div class="JoystickContainer" id="joystick">
+                    <div class="JoystickStick" id="stick"></div>
+                </div>
+
+                <!-- Правая Кнопка Прыжка -->
+                <div class="JumpButton" id="jumpBtn">JUMP</div>
+            </div>
+
+            <div class="ControlsHelp">
+                <strong>Управление:</strong> Стик слева на экране (или WASD на ПК) — перемещение кубика в 3D.<br>
+                Кнопка JUMP справа (или Пробел на ПК) — прыжок. Доберись до финального золотого блока!
+            </div>
+            <br>
+            <a href="games.html" class="BackBtn">← К списку игр</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.getElementById('parkourCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Игрок в 3D-пространстве
+    const player = {
+        x: 250, y: 300, z: 0,
+        vx: 0, vy: 0, vz: 0,
+        width: 16, height: 16, depth: 16,
+        speed: 3,
+        onGround: true
+    };
+
+    const gravity = 0.35;
+
+    // Платформы в 3D (x, y, z_высота, w, h, d_глубина)
+    const platforms = [
+        { x: 200, y: 280, z: 0, w: 100, h: 40, d: 20, color: '#8d6e63' }, // Стартовая
+        { x: 220, y: 200, z: 25, w: 50, h: 30, d: 20, color: '#4caf50' },
+        { x: 310, y: 150, z: 50, w: 40, h: 30, d: 20, color: '#2196f3' },
+        { x: 200, y: 110, z: 80, w: 45, h: 30, d: 20, color: '#9c27b0' },
+        { x: 120, y: 140, z: 110, w: 40, h: 30, d: 20, color: '#e91e63' },
+        { x: 150, y: 80, z: 140, w: 40, h: 30, d: 20, color: '#ff9800' },
+        { x: 240, y: 60, z: 170, w: 50, h: 30, d: 20, color: '#ffd700' } // Финиш (Золото)
+    ];
+
+    let keys = {};
+    let isWon = false;
+
+    // Джойстик
+    const joystick = document.getElementById('joystick');
+    const stick = document.getElementById('stick');
+    let joyX = 0, joyY = 0;
+    let isJoyActive = false;
+
+    joystick.addEventListener('touchstart', (e) => { isJoyActive = true; moveStick(e.touches[0]); }, { passive: true });
+    window.addEventListener('touchmove', (e) => { if (isJoyActive) moveStick(e.touches[0]); }, { passive: true });
+    window.addEventListener('touchend', () => {
+        isJoyActive = false;
+        stick.style.transform = 'translate(0px,0px)';
+        joyX = 0; joyY = 0;
+    });
+
+    function moveStick(touch) {
+        const rect = joystick.getBoundingClientRect();
+        const cX = rect.left + rect.width/2;
+        const cY = rect.top + rect.height/2;
+        let dx = touch.clientX - cX;
+        let dy = touch.clientY - cY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const maxD = 40;
+
+        if (dist > maxD) { dx = (dx/dist)*maxD; dy = (dy/dist)*maxD; }
+        stick.style.transform = `translate(${dx}px, ${dy}px)`;
+        joyX = dx / maxD;
+        joyY = dy / maxD;
+    }
+
+    // Тач прыжка
+    document.getElementById('jumpBtn').addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        triggerJump();
+    }, { passive: false });
+
+    window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key === ' ') triggerJump(); });
+    window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+    function triggerJump() {
+        if (player.onGround) {
+            player.vz = 6.5;
+            player.onGround = false;
+        }
+        if (isWon) resetGame();
+    }
+
+    function resetGame() {
+        player.x = 250; player.y = 300; player.z = 0;
+        player.vx = 0; player.vy = 0; player.vz = 0;
+        player.onGround = true;
+        isWon = false;
+    }
+
+    // Проекция 3D в 2D (Изометрия)
+    function project3D(x, y, z) {
+        // z приподнимает объект вверх по экрану, y наклоняет перспективу
+        return {
+            px: x - (y - 300) * 0.25,
+            py: y - z
+        };
+    }
+
+    function update() {
+        if (isWon) return;
+
+        // Ввод движения
+        let dx = 0, dy = 0;
+        if (keys['w'] || keys['arrowup']) dy = -player.speed;
+        if (keys['s'] || keys['arrowdown']) dy = player.speed;
+        if (keys['a'] || keys['arrowleft']) dx = -player.speed;
+        if (keys['d'] || keys['arrowright']) dx = player.speed;
+
+        if (isJoyActive) {
+            dx = joyX * player.speed;
+            dy = joyY * player.speed;
+        }
+
+        player.x += dx;
+        player.y += dy;
+
+        // Физика прыжка / гравитации
+        player.z += player.vz;
+        if (!player.onGround) {
+            player.vz -= gravity;
+        }
+
+        // Проверка приземления на платформы
+        let onPlatform = false;
+        for (let plat of platforms) {
+            if (player.x + player.width > plat.x && player.x < plat.x + plat.w &&
+                player.y + player.depth > plat.y && player.y < plat.y + plat.h) {
+                
+                // Проверяем уровень высоты (z)
+                if (player.z >= plat.z && player.z + player.vz <= plat.z + 4) {
+                    player.z = plat.z;
+                    player.vz = 0;
+                    player.onGround = true;
+                    onPlatform = true;
+
+                    // Если прыгнули на золотой финиш
+                    if (plat.color === '#ffd700') {
+                        isWon = true;
+                    }
+                }
+            }
+        }
+
+        if (!onPlatform && player.z > 0) {
+            player.onGround = false;
+        }
+
+        // Упал в бездну
+        if (player.z < -100) {
+            resetGame();
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Рисуем небо и солнце
+        ctx.fillStyle = '#80deea';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff9c4';
+        ctx.beginPath(); ctx.arc(420, 60, 30, 0, Math.PI*2); ctx.fill();
+
+        // Рендерим платформы в 3D
+        platforms.forEach(plat => {
+            let pProj = project3D(plat.x, plat.y, plat.z);
+            
+            // Тень платформы на земле
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fillRect(pProj.px, plat.y + 40, plat.w, plat.h);
+
+            // Основная грань платформы
+            ctx.fillStyle = plat.color;
+            ctx.fillRect(pProj.px, pProj.py, plat.w, plat.h);
+            
+            // 3D-объем (боковая грань)
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.moveTo(pProj.px, pProj.py + plat.h);
+            ctx.lineTo(pProj.px + 10, pProj.py + plat.h + 10);
+            ctx.lineTo(pProj.px + plat.w + 10, pProj.py + plat.h + 10);
+            ctx.lineTo(pProj.px + plat.w, pProj.py + plat.h);
+            ctx.closePath();
+            ctx.fill();
+        });
+
+        // Рендерим кубик игрока в 3D
+        let playerProj = project3D(player.x, player.y, player.z);
+        
+        // Тень кубика
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(playerProj.px, player.y + 10, player.width, 6);
+
+        // Игрок (Красный 3D-куб)
+        ctx.fillStyle = '#d50000';
+        ctx.fillRect(playerProj.px, playerProj.py - player.height, player.width, player.height);
+        
+        // Верхняя крышка куба
+        ctx.fillStyle = '#ff1744';
+        ctx.beginPath();
+        ctx.moveTo(playerProj.px, playerProj.py - player.height);
+        ctx.lineTo(playerProj.px + 5, playerProj.py - player.height - 5);
+        ctx.lineTo(playerProj.px + player.width + 5, playerProj.py - player.height - 5);
+        ctx.lineTo(playerProj.px + player.width, playerProj.py - player.height);
+        ctx.closePath();
+        ctx.fill();
+
+        // Финишная надпись
+        if (isWon) {
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 28px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('PARKOUR MASTER!', canvas.width/2, canvas.height/2);
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px Arial';
+            ctx.fillText('Click JUMP or Space to run again!', canvas.width/2, canvas.height/2 + 30);
+            ctx.textAlign = 'left';
+        }
+    }
+
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+    loop();
+});
+
+function toggleFullscreen() {
+    const gameArea = document.getElementById('gameArea');
+    if (!document.fullscreenElement) {
+        gameArea.requestFullscreen().catch(err => {
+            alert(`Ошибка входа в полноэкранный режим: ${err.message}`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+</script>
+</body>
+</html>
