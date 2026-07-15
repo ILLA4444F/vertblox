@@ -1,0 +1,149 @@
+/* Общие стили для всего сайта VERTBLOX */
+body {
+    background: #769ecb url('https://web.archive.org/web/20100528145241im_/http://www.roblox.com/images/Template/sub_background.gif') repeat-x top center;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+    color: #333;
+}
+
+#Container {
+    width: 900px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.6);
+    min-height: 100vh;
+    border-left: 1px solid #002277;
+    border-right: 1px solid #002277;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Шапка сайта */
+#Header {
+    background: #a9d0f5 url('https://web.archive.org/web/20100528145241im_/http://www.roblox.com/images/Template/sub_background.gif') repeat-x bottom center;
+    height: 95px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #7795bd;
+}
+
+.LogoContainer {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.LogoText {
+    font-size: 44px;
+    font-weight: 900;
+    color: #d02020;
+    text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000;
+    font-family: "Arial Black", sans-serif;
+    letter-spacing: -3px;
+}
+
+.AuthStatus {
+    font-size: 11px;
+    color: #002277;
+    text-align: right;
+    font-weight: bold;
+}
+
+.AuthStatus a {
+    color: #0055c5;
+    text-decoration: none;
+}
+
+.AuthStatus a:hover {
+    text-decoration: underline;
+}
+
+/* Панель навигации (меню) */
+#NavigationBar {
+    background: #2e639e linear-gradient(to bottom, #538cc6, #2e639e);
+    height: 34px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    border-bottom: 2px solid #002277;
+}
+
+#NavigationBar a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 12px;
+    margin-right: 20px;
+    text-shadow: 1px 1px 1px #002277;
+}
+
+#NavigationBar a:hover, #NavigationBar a.active {
+    color: #ffeb3b;
+    text-decoration: underline;
+}
+
+/* Основной контент */
+#MainBody {
+    padding: 15px;
+    display: flex;
+    gap: 15px;
+    flex-grow: 1;
+}
+
+#LeftColumn {
+    width: 190px;
+    flex-shrink: 0;
+}
+
+#RightColumn {
+    flex-grow: 1;
+}
+
+/* Виджеты по бокам */
+.WidgetBox {
+    border: 1px solid #7795bd;
+    background-color: #e2ebf5;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.WidgetBox h3 {
+    margin: -10px -10px 10px -10px;
+    background: #6a95cc linear-gradient(to bottom, #8cb1e0, #4c7bb8);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-bottom: 1px solid #7795bd;
+}
+
+/* Футер */
+#Footer {
+    border-top: 1px solid #7795bd;
+    padding: 15px;
+    text-align: center;
+    font-size: 11px;
+    color: #555;
+    background-color: #e2ebf5;
+    margin-top: auto;
+}
+
+#Footer a {
+    color: #0055c5;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.Disclaimer {
+    margin-top: 10px;
+    font-size: 10px;
+    color: #777;
+    background-color: #fff;
+    border: 1px dashed #7795bd;
+    padding: 8px;
+    border-radius: 3px;
+}
