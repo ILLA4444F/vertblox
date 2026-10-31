@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>VERTBLOX - Одесский трамвай №7</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#101820;color:white;
+ font-family:Arial,sans-serif;
+ user-select:none;touch-action:pan-y;
+}
+button{font:inherit;cursor:pointer;touch-action:none}
+#game{max-width:900px;margin:auto;padding:12px}
+.top{
+ display:flex;justify-content:space-between;align-items:center;
+ background:#202e3c;border-radius:15px;padding:14px;
+}
+.speed{font-size:32px;font-weight:bold}
+.panel{
+ background:#202e3c;border:1px solid #3b4d60;
+ border-radius:14px;padding:12px;margin-top:10px;
+}
+.scene{
+ height:190px;border-radius:12px;position:relative;overflow:hidden;
+ background:linear-gradient(#91b9c8 0%,#d5d5b8 58%,#454b50 59%);
+}
+.road{
+ position:absolute;bottom:0;width:100%;height:65px;background:#30383e;
+}
+.rails{
+ position:absolute;bottom:18px;width:100%;height:4px;background:#aaa;
+}
+.tram{
+ position:absolute;bottom:19px;left:50%;transform:translateX(-50%);
+ font-size:65px;transition:.15s;
+}
+#light{position:absolute;right:15px;top:15px;font-size:30px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.metric{
+ background:#293a4b;border-radius:10px;padding:10px;text-align:center;
+}
+.metric small{display:block;color:#aebdca;font-size:11px}
+.metric strong{font-size:20px}
+.progress{height:8px;background:#405064;border-radius:8px;overflow:hidden;margin-top:7px}
+.progress div{height:100%;background:#e8bd55;width:0%}
+.controls{
+ display:grid;grid-template-columns:1fr 1fr;gap:12px;
+}
+.control{
+ min-height:100px;border:0;border-radius:17px;
+ font-size:23px;font-weight:bold;
+ display:flex;align-items:center;justify-content:center;
+ flex-direction:column;gap:6px;
+ box-shadow:0 5px 0 #1118;
+}
+.control small{font-size:12px;font-weight:normal}
+.gas{background:#167a57;color:white}
+.brake{background:#b43b3b;color:white}
+.utility{
+ display:grid;grid-template-columns:repeat(4,1fr);gap:7px;
+}
+.utility button{
+ border:1px solid #66798d;background:#35495d;color:white;
+ padding:14px 4px;border-radius:12px;font-size:13px;
+}
+.utility button.on{background:#167a57}
+.status{color:#f4d27c;font-size:13px;min-height:20px}
+.log{font-size:13px;line-height:1.8;color:#d5e0eb}
+@media(max-width:520px){
+ #game{padding:7px}
+ .metrics{grid-template-columns:repeat(2,1fr)}
+ .control{min-height:115px;font-size:25px}
+ .utility{grid-template-columns:repeat(2,1fr)}
+ .scene{height:160px}
+}
+</style>
+</head>
+<body>
+<div id="game">
+ <div class="top">
+  <div>
+   <a href="games.html" style="color:#8ab4f8;text-decoration:none;font-size:12px">← Назад в каталог VERTBLOX</a><br>
+   <b>🚋 ОДЕССА · МАРШРУТ №7</b><br><small>Режим водителя</small>
+  </div>
+  <div style="text-align:right">
+   <div class="speed"><span id="speed">0</span></div>
+   <small>км/ч</small>
+  </div>
+ </div>
+
+ <div class="panel">
+  <div class="scene">
+   <div id="light">🟢</div>
+   <div style="position:absolute;top:12px;left:12px;color:#24313a;font-weight:bold">ОДЕССА</div>
+   <div class="road"></div><div class="rails"></div>
+   <div class="tram" id="tram">🚋</div>
+   <div style="position:absolute;bottom:5px;left:10px">🚶🏻 🚶🏻‍♀️</div>
+   <div style="position:absolute;bottom:5px;right:10px">🚗 🚙</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-top:12px">
+   <span>Следующая остановка</span>
+   <b id="next">Привоз</b>
+  </div>
+  <div class="progress"><div id="segmentProgress"></div></div>
+  <div class="status" id="status">Готов к отправлению</div>
+ </div>
+
+ <div class="panel metrics">
+  <div class="metric"><small>Остановки</small><strong id="stops">0/50</strong></div>
+  <div class="metric"><small>Пассажиры</small><strong id="passengers">12</strong></div>
+  <div class="metric"><small>Штрафы</small><strong id="fines">0 ₴</strong></div>
+  <div class="metric"><small>Повреждения</small><strong id="damage">0%</strong></div>
+ </div>
+
+ <div class="panel">
+  <b>Пульт управления</b>
+  <div class="controls" style="margin-top:12px">
+   <button class="control gas" id="gas">
+    ⬆ ГАЗ <small>Удерживать для разгона</small>
+   </button>
+   <button class="control brake" id="brake">
+    ⬇ ТОРМОЗ <small>Удерживать для торможения</small>
+   </button>
+  </div>
+  <div class="utility" style="margin-top:12px">
+   <button id="bell">🔔 Звонок</button>
+   <button id="doors">🚪 Двери</button>
+   <button id="handbrake">🅿 Ручник</button>
+   <button id="camera">📷 Камера</button>
+  </div>
+ </div>
+
+ <div class="panel">
+  <div class="utility">
+   <button id="start" class="on">▶ Старт</button>
+   <button id="music" class="on">🎵 Музыка ВКЛ</button>
+   <button id="sound" class="on">🔊 Звуки ВКЛ</button>
+   <button id="reset">↻ Сброс</button>
+  </div>
+  <div class="status" id="hint" style="margin-top:12px">
+   Используй газ и тормоз. Перед остановкой сбрось скорость.
+  </div>
+ </div>
+
+ <div class="panel">
+  <b>Журнал рейса</b>
+  <div class="log" id="log">Трамвай ожидает отправления.</div>
+ </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+const route=[
+'Привоз','Старосенная площадь','Куликово поле',
+'Площадь Веры Холодной','Театральная','Дерибасовская',
+'Греческая площадь','Соборная площадь','Тираспольская',
+'Еврейская','Преображенская','Александровский проспект',
+'Княжеская','Мечникова','Слободской рынок','Маловского',
+'Балковская','Заводская','Пересыпский мост','Пересыпь',
+'Лузановка','Северная','Южная','Портовая','Морская',
+'Солнечная','Промышленная','Садовая','Школьная',
+'Центральная','Парковая','Молодёжная','Деповская',
+'Железнодорожная','Вокзальная','Площадь','Университетская',
+'Больничная','Почтовая','Рыночная','Фонтанская',
+'Лесная','Станционная','Старая','Новая','Победы',
+'Заводская проходная','Конечная улица','Разворотная','Конечная'
+];
+
+let speed=0,segment=0,progress=0;
+let passengers=12,fines=0,damage=0;
+let running=false,doors=false,handbrake=false;
+let gas=false,braking=false,light=2;
+let musicOn=true,soundOn=true;
+let camera=0,seconds=0,violations=0;
+let audio=null,frame=0;
+
+function sound(freq=500,duration=.12){
+ if(!soundOn)return;
+ try{
+  audio=audio||new (window.AudioContext||window.webkitAudioContext)();
+  if(audio.state==='suspended')audio.resume();
+  let osc=audio.createOscillator();
+  let gain=audio.createGain();
+  osc.frequency.value=freq;
+  gain.gain.value=.04;
+  osc.connect(gain);gain.connect(audio.destination);
+  osc.start();osc.stop(audio.currentTime+duration);
+ }catch(e){}
+}
+
+function log(message){
+ $('log').innerHTML=message+'<br>'+$('log').innerHTML;
+}
+
+function penalty(amount,message,damageAmount=0){
+ fines+=amount;
+ violations++;
+ damage=Math.min(100,damage+damageAmount);
+ log('⚠ '+message+' — '+amount+' ₴');
+ sound(130,.3);
+ if(fines>=5000||violations>=8||damage>=100){
+  finish(false,message);
+ }
+}
+
+function finish(win,reason=''){
+ running=false;
+ gas=false;braking=false;
+ $('status').textContent=win?'🏆 Рейс успешно завершён':'💥 Рейс завершён';
+ $('hint').textContent=win?
+ 'Все остановки пройдены! Очки: '+Math.max(0,segment*100-fines):
+ 'Причина: '+reason;
+ $('start').textContent='Рейс завершён';
+ $('start').disabled=true;
+}
+
+function update(){
+ $('speed').textContent=Math.round(speed);
+ $('stops').textContent=segment+'/50';
+ $('passengers').textContent=passengers;
+ $('fines').textContent=fines+' ₴';
+ $('damage').textContent=damage+'%';
+ $('next').textContent=route[Math.min(segment,49)];
+ $('segmentProgress').style.width=(progress/300*100)+'%';
+ $('light').textContent=['🔴','🟡','🟢'][light];
+ $('tram').style.transform='translateX(-50%) translateX('+Math.sin(frame/5)*Math.min(speed,50)/8+'px)';
+}
+
+function arrive(){
+ running=false;
+ speed=0;
+ progress=0;
+ $('status').textContent='📍 Остановка: '+route[segment];
+ log('Остановка: '+route[segment]);
+ $('start').textContent='▶ Отправиться';
+}
+
+function tick(){
+ frame++;
+ if(running){
+  seconds++;
+  if(gas&&!doors&&!handbrake)speed=Math.min(90,speed+0.7);
+  if(braking)speed=Math.max(0,speed-1.8);
+  if(!gas&&!braking)speed=Math.max(0,speed-.1);
+
+  if(frame%100===0)light=(light+1)%3;
+
+  if(light===0&&progress>=270){
+   if(speed>5){
+    penalty(400,'Проезд на красный',10);
+    speed=0;
+    if(!running){update();return}
+   }else speed=0;
+  }else{
+   progress+=speed/3.6*.1;
+  }
+
+  if(speed>60&&frame%40===0)
+   penalty(150,'Превышение скорости',0);
+
+  if(progress>=300){
+   if(speed>12){
+    penalty(250,'Пропуск остановки',10);
+    if(!running){update();return}
+   }
+   segment++;
+   if(segment>=50){finish(true);update();return}
+   passengers=Math.max(0,Math.min(35,passengers+Math.floor(Math.random()*7)-3));
+   arrive();
+  }
+
+  if(speed>75&&Math.random()<.002){
+   penalty(600,'ДТП',35);
+  }
+ }
+ update();
+}
+
+function start(){
+ if(doors){$('status').textContent='Сначала закрой двери!';return}
+ if(handbrake){$('status').textContent='Сними ручник!';return}
+ running=true;
+ $('start').textContent='⏸ Пауза';
+ $('status').textContent='Трамвай движется';
+}
+
+function hold(id,callback){
+ const button=$(id);
+ button.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  button.setPointerCapture(e.pointerId);
+  callback(true);
+ });
+ ['pointerup','pointercancel','lostpointercapture'].forEach(type=>
+  button.addEventListener(type,()=>callback(false))
+ );
+}
+
+hold('gas',v=>gas=v);
+hold('brake',v=>braking=v);
+
+$('start').onclick=()=>{
+ if(running){
+  running=false;
+  $('start').textContent='▶ Продолжить';
+  $('status').textContent='Пауза';
+ }else start();
+};
+
+$('doors').onclick=()=>{
+ if(running&&speed>1)return;
+ doors=!doors;
+ $('doors').textContent=doors?'🚪 Закрыть двери':'🚪 Двери';
+ if(doors){
+  let out=Math.min(passengers,Math.floor(Math.random()*5)+1);
+  passengers=passengers-out+Math.floor(Math.random()*6)+1;
+  $('status').textContent='Посадка и высадка пассажиров';
+ }else $('status').textContent='Двери закрыты';
+ update();
+};
+
+$('handbrake').onclick=()=>{
+ if(speed>2){$('status').textContent='Сначала полностью остановись';return}
+ handbrake=!handbrake;
+ $('handbrake').classList.toggle('on',handbrake);
+ $('status').textContent=handbrake?'Ручник включён':'Ручник снят';
+};
+
+$('bell').onclick=()=>sound(880,.2);
+
+$('camera').onclick=()=>{
+ camera=(camera+1)%3;
+ const cameraNames=['📷 Камера водителя','📷 Вид спереди','📷 Вид сбоку'];
+ $('camera').textContent=cameraNames[camera];
+ $('hint').textContent=cameraNames[camera];
+ if(camera===0){
+  $('tram').style.fontSize='65px';
+  $('tram').style.bottom='19px';
+ }else if(camera===1){
+  $('tram').style.fontSize='90px';
+  $('tram').style.bottom='10px';
+ }else{
+  $('tram').style.fontSize='45px';
+  $('tram').style.bottom='30px';
+ }
+};
+
+$('music').onclick=()=>{
+ musicOn=!musicOn;
+ $('music').textContent=musicOn?'🎵 Музыка ВКЛ':'🎵 Музыка ВЫКЛ';
+ $('music').classList.toggle('on',musicOn);
+};
+
+$('sound').onclick=()=>{
+ soundOn=!soundOn;
+ $('sound').textContent=soundOn?'🔊 Звуки ВКЛ':'🔇 Звуки ВЫКЛ';
+ $('sound').classList.toggle('on',soundOn);
+};
+
+$('reset').onclick=()=>{
+ speed=0;segment=0;progress=0;passengers=12;
+ fines=0;damage=0;running=false;doors=false;
+ handbrake=false;gas=false;braking=false;
+ violations=0;light=2;seconds=0;
+ $('start').disabled=false;
+ $('start').textContent='▶ Старт';
+ $('doors').textContent='🚪 Двери';
+ $('handbrake').classList.remove('on');
+ $('log').textContent='Новый рейс готов.';
+ $('status').textContent='Готов к отправлению';
+ $('hint').textContent='Удачной поездки!';
+ update();
+};
+
+document.addEventListener('keydown',e=>{
+ if(['ArrowUp','ArrowDown',' '].includes(e.key))e.preventDefault();
+ if(e.repeat)return;
+ if(e.key==='ArrowUp'||e.key.toLowerCase()==='w')gas=true;
+ if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')braking=true;
+ if(e.key===' ')sound(880,.2);
+ if(e.key.toLowerCase()==='d')$('doors').click();
+ if(e.key.toLowerCase()==='p')$('handbrake').click();
+});
+document.addEventListener('keyup',e=>{
+ if(e.key==='ArrowUp'||e.key.toLowerCase()==='w')gas=false;
+ if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')braking=false;
+});
+window.addEventListener('blur',()=>{gas=false;braking=false});
+
+setInterval(tick,100);
+update();
+</script>
+</body>
+</html>
