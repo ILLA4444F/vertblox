@@ -91,7 +91,7 @@ canvas{display:block; width:100%; height:340px; background:#182533}
       </div>
       <div>
         <label style="font-size:13px; color:#8b9dc3">Номер вагона: </label>
-        <input type="text" id="tramNumberInput" value="4444" style="background:#0e1621; border:1px solid #2b394a; color:#ffca28; padding:5px 10px; border-radius:6px; width:70px; font-weight:bold; text-align:center">
+        <input type="text" id="tramNumberInput" value="4444_F" style="background:#0e1621; border:1px solid #2b394a; color:#ffca28; padding:5px 10px; border-radius:6px; width:90px; font-weight:bold; text-align:center">
       </div>
     </div>
     <div style="margin-top:20px">
@@ -164,6 +164,23 @@ canvas{display:block; width:100%; height:340px; background:#182533}
 </div>
 
 <script>
+// --- ПОДКЛЮЧЕНИЕ ТВОЕГО ФАЙЛА КАРТИНКИ ---
+const assets = {
+  tram: new Image(),
+  station: new Image(),
+  bg: new Image()
+};
+
+// Путь к твоему загруженному файлу TatraT3_4021.png
+assets.tram.src = 'TatraT3_4021.png';
+assets.station.src = 'images/station.png';
+assets.bg.src = 'images/bg.png';
+
+let assetsLoaded = { tram: false, station: false, bg: false };
+assets.tram.onload = () => assetsLoaded.tram = true;
+assets.station.onload = () => assetsLoaded.station = true;
+assets.bg.onload = () => assetsLoaded.bg = true;
+
 const ROUTES = {
   7: { name: "Маршрут №7", stops: ["Пересыпский мост", "Зоопарковая", "Лузановка", "Пляж Лузановка", "Капитанская", "Марсельская", "Заболотного", "Днепродорога", "Ул. Паустовского"] },
   18: { name: "Маршрут №18", stops: ["Куликово поле", "Пантелеймоновская", "Пироговская", "Армейская", "Сегедская", "Шевченко", "8-я ст. Фонтана", "11-я ст. Фонтана", "16-я ст. Фонтана"] },
@@ -174,7 +191,7 @@ const ROUTES = {
 let currentRouteId = 7;
 let currentStops = [];
 let stopIndex = 0;
-let customTramNum = "4444";
+let customTramNum = "4444_F";
 
 let speed = 0, totalProgress = 0, distanceToNextStop = 600;
 let passengers = 0, earnedMoney = 0, fines = 0;
@@ -271,7 +288,7 @@ function toggleDoors() {
     let leaving = Math.floor(Math.random() * (passengers + 1));
     let entering = Math.floor(Math.random() * 10) + 5;
     passengers = Math.max(0, passengers - leaving) + entering;
-    let earned = entering * 10; // 10 грн за билет
+    let earned = entering * 10;
     earnedMoney += earned;
     addLog(`🚪 Посадка на ст. "${currentStops[stopIndex]}". Выручка: +${earned} ₴`);
   } else {
@@ -284,7 +301,7 @@ function toggleDoors() {
       addLog(`🏆 Маршрут пройден! Выручка: ${earnedMoney} ₴ | Штрафы: ${fines} ₴ | Итог: ${net} ₴`);
       stopIndex = currentStops.length - 1;
     } else {
-      distanceToNextStop = 600; // Дистанция до следующей остановки
+      distanceToNextStop = 600;
     }
   }
 }
@@ -303,20 +320,25 @@ function drawScene() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (cameraMode === 0) {
-    // Небо и фон
-    let skyGrad = ctx.createLinearGradient(0,0,0,190);
-    skyGrad.addColorStop(0, '#102030'); skyGrad.addColorStop(1, '#3a506b');
-    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, 190);
+    // 1. Небо и дальний фон
+    if (assetsLoaded.bg) {
+      let bgX = -(totalProgress * 0.4) % canvas.width;
+      ctx.drawImage(assets.bg, bgX, 0, canvas.width, 190);
+      ctx.drawImage(assets.bg, bgX + canvas.width, 0, canvas.width, 190);
+    } else {
+      let skyGrad = ctx.createLinearGradient(0,0,0,190);
+      skyGrad.addColorStop(0, '#102030'); skyGrad.addColorStop(1, '#3a506b');
+      ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, 190);
 
-    // Дома (параллакс по totalProgress)
-    ctx.fillStyle = '#1c2d3e';
-    for (let i = -150; i < canvas.width + 150; i += 160) {
-      let x = ((i - Math.floor(totalProgress * 0.4)) % (canvas.width + 300));
-      if(x < -150) x += canvas.width + 300;
-      ctx.fillRect(x, 70, 100, 120);
+      ctx.fillStyle = '#1c2d3e';
+      for (let i = -150; i < canvas.width + 150; i += 160) {
+        let x = ((i - Math.floor(totalProgress * 0.4)) % (canvas.width + 300));
+        if(x < -150) x += canvas.width + 300;
+        ctx.fillRect(x, 70, 100, 120);
+      }
     }
 
-    // Земля, дорога, рельсы
+    // 2. Рельсы и дорога
     ctx.fillStyle = '#263238'; ctx.fillRect(0, 190, canvas.width, 150);
     ctx.fillStyle = '#455a64';
     for (let i = -20; i < canvas.width + 20; i += 30) {
@@ -327,25 +349,21 @@ function drawScene() {
     ctx.fillRect(0, 222, canvas.width, 3);
     ctx.fillRect(0, 234, canvas.width, 3);
 
-    // --- МОДЕЛЬ ОСТАНОВКИ (когда близко) ---
+    // 3. Модель остановки
     if (distanceToNextStop < 250) {
       let stationX = canvas.width / 2 + distanceToNextStop;
-      // Павильон остановки
-      ctx.fillStyle = '#37474f'; ctx.fillRect(stationX, 130, 120, 60); // крыша/стены
-      ctx.fillStyle = '#546e7a'; ctx.fillRect(stationX + 10, 140, 100, 40); // проем
-      ctx.fillStyle = '#78909c'; ctx.fillRect(stationX + 15, 175, 90, 5); // скамейка
-      ctx.fillStyle = '#ffca28'; ctx.font = 'bold 11px sans-serif';
-      ctx.fillText(`🚏 ${currentStops[stopIndex]}`, stationX + 5, 122);
-
-      // Ожидающие пассажиры
-      ctx.fillStyle = '#b0bec5';
-      ctx.fillRect(stationX + 30, 160, 8, 15);
-      ctx.fillRect(stationX + 50, 158, 8, 17);
-      ctx.fillRect(stationX + 70, 162, 8, 13);
+      if (assetsLoaded.station) {
+        ctx.drawImage(assets.station, stationX, 120, 140, 80);
+      } else {
+        ctx.fillStyle = '#37474f'; ctx.fillRect(stationX, 130, 120, 60);
+        ctx.fillStyle = '#546e7a'; ctx.fillRect(stationX + 10, 140, 100, 40);
+        ctx.fillStyle = '#78909c'; ctx.fillRect(stationX + 15, 175, 90, 5);
+      }
+      ctx.fillStyle = '#ffca28'; ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(`🚏 ${currentStops[stopIndex]}`, stationX + 5, 115);
     }
 
-    // --- СТАБИЛЬНЫЙ СВЕТОФОР ---
-    // Появляется на определенной дистанции мира
+    // 4. Светофор
     let lightWorldPos = 350;
     let lightScreenX = lightWorldPos - (totalProgress % 800) + 400;
     if(lightScreenX > -50 && lightScreenX < canvas.width + 50) {
@@ -355,76 +373,78 @@ function drawScene() {
       ctx.fillStyle = lightState === 2 ? '#00e676' : '#004400';
       ctx.beginPath(); ctx.arc(lightScreenX+8, 136, 5, 0, Math.PI*2); ctx.fill();
 
-      // Штраф за проезд на красный (с защитой от спама)
       if (lightState === 0 && lightScreenX > 320 && lightScreenX < 420 && speed > 3 && !redLightPenaltyGiven) {
         addFine(300, "Проезд на запрещающий сигнал светофора!");
         redLightPenaltyGiven = true;
       }
-      if(lightScreenX > 500) redLightPenaltyGiven = false; // сброс для следующего светофора
+      if(lightScreenX > 500) redLightPenaltyGiven = false;
     }
 
-    // --- ТАТРА T3 С ТВОИМ НОМОМЕРОМ ---
+    // 5. Отрисовка трамвая Tatra T3
     let tramX = canvas.width / 2 - 140;
     let bounce = speed > 0 ? Math.sin(frame / 2) * (speed / 25) : 0;
     let tramY = 125 + bounce;
 
-    ctx.fillStyle = '#c62828'; ctx.fillRect(tramX, tramY + 45, 280, 40);
-    ctx.fillStyle = '#fff9c4'; ctx.fillRect(tramX, tramY + 5, 280, 40);
-    ctx.fillStyle = '#37474f'; ctx.fillRect(tramX + 10, tramY - 5, 260, 10);
+    if (assetsLoaded.tram) {
+      // Рисуем твой сохраненный PNG вагон
+      ctx.drawImage(assets.tram, tramX, tramY - 20, 300, 110);
+      ctx.fillStyle = '#ffca28';
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText(customTramNum, tramX + 130, tramY + 52);
+    } else {
+      // Резервный векторный трамвай
+      ctx.fillStyle = '#c62828'; ctx.fillRect(tramX, tramY + 45, 280, 40);
+      ctx.fillStyle = '#fff9c4'; ctx.fillRect(tramX, tramY + 5, 280, 40);
+      ctx.fillStyle = '#37474f'; ctx.fillRect(tramX + 10, tramY - 5, 260, 10);
 
-    // Четкий твой бортовой номер на борту
-    ctx.fillStyle = '#b71c1c';
-    ctx.font = 'bold 14px monospace';
-    ctx.fillText(customTramNum, tramX + 120, tramY + 68);
+      ctx.fillStyle = '#b71c1c';
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText(customTramNum, tramX + 120, tramY + 68);
 
-    // Номер маршрута спереди
-    ctx.fillStyle = '#1b5e20'; ctx.fillRect(tramX + 12, tramY + 12, 22, 18);
-    ctx.fillStyle = '#4caf50'; ctx.font = 'bold 12px sans-serif';
-    ctx.fillText(currentRouteId, tramX + 17, tramY + 26);
+      ctx.fillStyle = '#1b5e20'; ctx.fillRect(tramX + 12, tramY + 12, 22, 18);
+      ctx.fillStyle = '#4caf50'; ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(currentRouteId, tramX + 17, tramY + 26);
 
-    // Окна
-    ctx.fillStyle = '#81d4fa';
-    let wx = tramX + 40;
-    for(let w = 0; w < 6; w++) {
-      ctx.fillRect(wx, tramY + 12, 28, 25);
-      wx += 35;
-    }
+      ctx.fillStyle = '#81d4fa';
+      let wx = tramX + 40;
+      for(let w = 0; w < 6; w++) {
+        ctx.fillRect(wx, tramY + 12, 28, 25);
+        wx += 35;
+      }
 
-    // Двери с анимацией
-    doorAnimProgress += (doorsOpen ? 0.05 : -0.05);
-    doorAnimProgress = Math.max(0, Math.min(1, doorAnimProgress));
+      doorAnimProgress += (doorsOpen ? 0.05 : -0.05);
+      doorAnimProgress = Math.max(0, Math.min(1, doorAnimProgress));
 
-    ctx.fillStyle = '#263238';
-    ctx.fillRect(tramX + 85, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
-    ctx.fillRect(tramX + 190, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
-    ctx.fillRect(tramX + 225, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
+      ctx.fillStyle = '#263238';
+      ctx.fillRect(tramX + 85, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
+      ctx.fillRect(tramX + 190, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
+      ctx.fillRect(tramX + 225, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
 
-    // Тележки и колеса
-    ctx.fillStyle = '#37474f';
-    ctx.fillRect(tramX + 50, tramY + 80, 50, 15);
-    ctx.fillRect(tramX + 190, tramY + 80, 50, 15);
-    ctx.fillStyle = '#212121';
-    ctx.beginPath(); ctx.arc(tramX + 65, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(tramX + 90, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(tramX + 205, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(tramX + 230, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#37474f';
+      ctx.fillRect(tramX + 50, tramY + 80, 50, 15);
+      ctx.fillRect(tramX + 190, tramY + 80, 50, 15);
+      ctx.fillStyle = '#212121';
+      ctx.beginPath(); ctx.arc(tramX + 65, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(tramX + 90, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(tramX + 205, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(tramX + 230, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
 
-    // Пантограф
-    ctx.strokeStyle = '#b71c1c'; ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(tramX + 140, tramY - 5);
-    ctx.lineTo(tramX + 160, tramY - 45);
-    ctx.lineTo(tramX + 120, tramY - 75);
-    ctx.stroke();
-
-    if (speed > 5 && Math.random() < 0.3) {
-      ctx.fillStyle = '#00e5ff';
+      ctx.strokeStyle = '#b71c1c'; ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(tramX + 120 + (Math.random()*8-4), tramY - 75 + (Math.random()*4-2), 3, 0, Math.PI*2);
-      ctx.fill();
+      ctx.moveTo(tramX + 140, tramY - 5);
+      ctx.lineTo(tramX + 160, tramY - 45);
+      ctx.lineTo(tramX + 120, tramY - 75);
+      ctx.stroke();
+
+      if (speed > 5 && Math.random() < 0.3) {
+        ctx.fillStyle = '#00e5ff';
+        ctx.beginPath();
+        ctx.arc(tramX + 120 + (Math.random()*8-4), tramY - 75 + (Math.random()*4-2), 3, 0, Math.PI*2);
+        ctx.fill();
+      }
     }
   } else {
-    // Вид из кабины
+    // Вид из кабины (FPV)
     ctx.fillStyle = '#102027'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = '#b0bec5'; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(canvas.width/2 - 20, 140); ctx.lineTo(100, 340); ctx.stroke();
@@ -459,7 +479,6 @@ function update() {
       }
     }
 
-    // Смена светофоров со временем
     if(frame % 250 === 0) lightState = lightState === 2 ? 0 : 2;
 
     let netBalance = earnedMoney - fines;
