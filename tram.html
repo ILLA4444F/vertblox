@@ -17,7 +17,7 @@ body{
   background:#17212b; border:1px solid #2b394a; border-radius:12px; padding:12px 20px;
 }
 .top-bar a{color:#64b5f6; text-decoration:none; font-size:13px; font-weight:bold}
-.money-badge{font-size:28px; font-weight:900; color:#4caf50}
+.money-badge{font-size:26px; font-weight:900; color:#4caf50}
 
 .menu-screen, .game-screen{display:none}
 .menu-screen.active, .game-screen.active{display:block}
@@ -56,7 +56,7 @@ canvas{display:block; width:100%; height:340px; background:#182533}
   background:#17212b; border:1px solid #2b394a; border-radius:10px; padding:12px; text-align:center;
 }
 .metric small{display:block; color:#8b9dc3; font-size:11px; text-transform:uppercase; font-weight:bold}
-.metric strong{font-size:22px; color:#fff}
+.metric strong{font-size:20px; color:#fff}
 
 .controls-guide{
   background:#17212b; border:1px solid #2b394a; border-radius:12px; padding:15px; margin-top:12px;
@@ -82,7 +82,7 @@ canvas{display:block; width:100%; height:340px; background:#182533}
 <body>
 
 <div id="game">
-  <!-- МЕНЮ ВЫБОРА МАРШРУТА И ВАГОНА -->
+  <!-- МЕНЮ ДЕПО -->
   <div id="menuScreen" class="menu-screen active">
     <div class="top-bar">
       <div>
@@ -90,12 +90,12 @@ canvas{display:block; width:100%; height:340px; background:#182533}
         <h2 style="margin:5px 0 0 0; color:#fff">🚋 Депо Одесского Трамвая</h2>
       </div>
       <div>
-        <label style="font-size:13px; color:#8b9dc3">Бортовой номер вагона: </label>
+        <label style="font-size:13px; color:#8b9dc3">Номер вагона: </label>
         <input type="text" id="tramNumberInput" value="4444" style="background:#0e1621; border:1px solid #2b394a; color:#ffca28; padding:5px 10px; border-radius:6px; width:70px; font-weight:bold; text-align:center">
       </div>
     </div>
     <div style="margin-top:20px">
-      <p style="color:#8b9dc3">Выберите маршрут электротранспорта Одессы для начала рейса:</p>
+      <p style="color:#8b9dc3">Выберите маршрут электротранспорта Одессы:</p>
       <div class="routes-grid">
         <div class="route-card" onclick="startRoute(7)">
           <h3>Маршрут №7</h3>
@@ -121,11 +121,11 @@ canvas{display:block; width:100%; height:340px; background:#182533}
   <div id="gameScreen" class="game-screen">
     <div class="top-bar">
       <div>
-        <button onclick="returnToMenu()" style="background:#2b394a; border:0; color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer">Выход в депо</button>
+        <button onclick="returnToMenu()" style="background:#2b394a; border:0; color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer">В депо</button>
         <span id="routeTitle" style="margin-left:10px; font-weight:bold; color:#ffca28">Маршрут №7</span>
       </div>
       <div style="text-align:right">
-        <div class="money-badge"><span id="money">0</span> <small style="font-size:14px">₴</small></div>
+        <div class="money-badge">Баланс: <span id="netMoney">0</span> <small style="font-size:14px">₴</small></div>
       </div>
     </div>
 
@@ -138,10 +138,10 @@ canvas{display:block; width:100%; height:340px; background:#182533}
     </div>
 
     <div class="metrics-grid">
-      <div class="metric"><small>Скорость</small><strong id="speed">0</strong> <span style="font-size:12px">км/ч</span></div>
+      <div class="metric"><small>Скорость</small><strong id="speed">0</strong> <span style="font-size:11px">км/ч</span></div>
       <div class="metric"><small>Пассажиры</small><strong id="passengers">0</strong></div>
-      <div class="metric"><small>Остановки</small><strong id="stopsProgress">0 / 0</strong></div>
       <div class="metric"><small>Штрафы</small><strong id="fines" style="color:#ef5350">0 ₴</strong></div>
+      <div class="metric"><small>Остановки</small><strong id="stopsProgress">0 / 0</strong></div>
     </div>
 
     <div class="controls-guide">
@@ -152,7 +152,7 @@ canvas{display:block; width:100%; height:340px; background:#182533}
         <div class="key-item"><span>Двери (Посадка)</span> <span class="kbd">E</span></div>
         <div class="key-item"><span>Звонок</span> <span class="kbd">SPACE</span></div>
         <div class="key-item"><span>Ручник</span> <span class="kbd">P</span></div>
-        <div class="key-item"><span>Смена камеры</span> <span class="kbd">C</span></div>
+        <div class="key-item"><span>Камера</span> <span class="kbd">C</span></div>
       </div>
     </div>
 
@@ -165,22 +165,10 @@ canvas{display:block; width:100%; height:340px; background:#182533}
 
 <script>
 const ROUTES = {
-  7: {
-    name: "Маршрут №7 (Пересыпь — Поскот)",
-    stops: ["Пересыпский мост", "Зоопарковая", "Лузановка", "Пляж «Лузановка»", "Капитанская", "Марсельская", "Заболотного", "Днепродорога", "Ул. Паустовского"]
-  },
-  18: {
-    name: "Маршрут №18 (Фонтан — Куликово поле)",
-    stops: ["Куликово поле", "Пантелеймоновская", "Ул. Пироговская", "Армейская", "Ул. Сегедская", "Шевченко", "8-я ст. Большого Фонтана", "11-я ст. Большого Фонтана", "16-я ст. Большого Фонтана"]
-  },
-  27: {
-    name: "Маршрут №27 (Черноморка — Пересыпь)",
-    stops: ["Пересыпский мост", "Цукрзавод", "Зоопарковая", "Морпорт", "Дальницкая", "Столбовая", "Рыбпорт", "Станция «Черноморка»"]
-  },
-  20: {
-    name: "Маршрут №20 (Хаджибей — Зерновой)",
-    stops: ["Зерновой переулок", "Сахарный завод", "Кривая Балка", "Промзона", "Хаджибейский лиман"]
-  }
+  7: { name: "Маршрут №7", stops: ["Пересыпский мост", "Зоопарковая", "Лузановка", "Пляж Лузановка", "Капитанская", "Марсельская", "Заболотного", "Днепродорога", "Ул. Паустовского"] },
+  18: { name: "Маршрут №18", stops: ["Куликово поле", "Пантелеймоновская", "Пироговская", "Армейская", "Сегедская", "Шевченко", "8-я ст. Фонтана", "11-я ст. Фонтана", "16-я ст. Фонтана"] },
+  27: { name: "Маршрут №27", stops: ["Пересыпский мост", "Цукрзавод", "Зоопарковая", "Морпорт", "Дальницкая", "Столбовая", "Рыбпорт", "Станция Черноморка"] },
+  20: { name: "Маршрут №20", stops: ["Зерновой переулок", "Сахарный завод", "Кривая Балка", "Промзона", "Хаджибейский лиман"] }
 };
 
 let currentRouteId = 7;
@@ -188,13 +176,14 @@ let currentStops = [];
 let stopIndex = 0;
 let customTramNum = "4444";
 
-let speed = 0, distanceToNextStop = 400;
-let passengers = 0, money = 0, fines = 0;
+let speed = 0, totalProgress = 0, distanceToNextStop = 600;
+let passengers = 0, earnedMoney = 0, fines = 0;
 let doorsOpen = false, handbrake = false;
 let cameraMode = 0; 
-let lightState = 2; // 0: Red, 1: Yellow, 2: Green
+let lightState = 2; // 0: Red, 2: Green
 let frame = 0, isAtStation = false;
 let doorAnimProgress = 0; 
+let redLightPenaltyGiven = false;
 
 const keys = { w:false, s:false };
 let audioCtx = null;
@@ -220,7 +209,6 @@ function addLog(msg) {
 
 function addFine(amount, reason) {
   fines += amount;
-  money = Math.max(0, money - amount);
   playTone(120, 0.3, 'sawtooth');
   addLog(`🚨 ШТРАФ: ${reason} (-${amount} ₴)`);
 }
@@ -229,14 +217,16 @@ function startRoute(id) {
   currentRouteId = id;
   currentStops = ROUTES[id].stops;
   stopIndex = 0;
-  distanceToNextStop = 400;
+  totalProgress = 0;
+  distanceToNextStop = 600;
   passengers = 0;
-  money = 0;
+  earnedMoney = 0;
   fines = 0;
   speed = 0;
   doorsOpen = false;
   isAtStation = false;
   doorAnimProgress = 0;
+  redLightPenaltyGiven = false;
 
   let inputVal = document.getElementById('tramNumberInput').value.trim();
   if(inputVal) customTramNum = inputVal;
@@ -244,7 +234,7 @@ function startRoute(id) {
   document.getElementById('routeTitle').textContent = ROUTES[id].name;
   document.getElementById('menuScreen').classList.remove('active');
   document.getElementById('gameScreen').classList.add('active');
-  addLog(`Вагон №${customTramNum} вышел на линию: ${ROUTES[id].name}. Следующая остановка: ${currentStops[0]}`);
+  addLog(`Вагон №${customTramNum} вышел на ${ROUTES[id].name}. Следующая: ${currentStops[0]}`);
 }
 
 function returnToMenu() {
@@ -272,28 +262,29 @@ window.addEventListener('keyup', e => {
 
 function toggleDoors() {
   if (speed > 1) { addLog('⚠️ Опасно! Нельзя открывать двери на ходу.'); return; }
-  if (!isAtStation) { addLog('⚠️ Здесь нет остановочного пункта! Дождитесь остановки.'); return; }
+  if (!isAtStation) { addLog('⚠️ Здесь нет остановочного пункта!'); return; }
 
   doorsOpen = !doorsOpen;
   playTone(250, 0.2);
 
   if (doorsOpen) {
     let leaving = Math.floor(Math.random() * (passengers + 1));
-    let entering = Math.floor(Math.random() * 10) + 4;
+    let entering = Math.floor(Math.random() * 10) + 5;
     passengers = Math.max(0, passengers - leaving) + entering;
-    let earned = entering * 10; // 10 гривен за билет
-    money += earned;
+    let earned = entering * 10; // 10 грн за билет
+    earnedMoney += earned;
     addLog(`🚪 Посадка на ст. "${currentStops[stopIndex]}". Выручка: +${earned} ₴`);
   } else {
-    addLog(`🚪 Остановка "${currentStops[stopIndex]}" пройдена. Едем дальше.`);
+    addLog(`🚪 Остановка "${currentStops[stopIndex]}" пройдена.`);
     isAtStation = false;
     stopIndex++;
     
     if (stopIndex >= currentStops.length) {
-      addLog(`🏆 Маршрут успешно завершен! Итоговая выручка: ${money} ₴ (Штрафы: ${fines} ₴)`);
+      let net = earnedMoney - fines;
+      addLog(`🏆 Маршрут пройден! Выручка: ${earnedMoney} ₴ | Штрафы: ${fines} ₴ | Итог: ${net} ₴`);
       stopIndex = currentStops.length - 1;
     } else {
-      distanceToNextStop = 400; // Дистанция до следующей реальной остановки
+      distanceToNextStop = 600; // Дистанция до следующей остановки
     }
   }
 }
@@ -317,41 +308,62 @@ function drawScene() {
     skyGrad.addColorStop(0, '#102030'); skyGrad.addColorStop(1, '#3a506b');
     ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, 190);
 
-    // Дома (параллакс)
+    // Дома (параллакс по totalProgress)
     ctx.fillStyle = '#1c2d3e';
-    for (let i = -100; i < canvas.width + 100; i += 140) {
-      let x = (i - (frame * speed * 0.05) % 140);
-      ctx.fillRect(x, 70, 90, 120);
+    for (let i = -150; i < canvas.width + 150; i += 160) {
+      let x = ((i - Math.floor(totalProgress * 0.4)) % (canvas.width + 300));
+      if(x < -150) x += canvas.width + 300;
+      ctx.fillRect(x, 70, 100, 120);
     }
 
-    // Дорожное полотно и рельсы
+    // Земля, дорога, рельсы
     ctx.fillStyle = '#263238'; ctx.fillRect(0, 190, canvas.width, 150);
     ctx.fillStyle = '#455a64';
     for (let i = -20; i < canvas.width + 20; i += 30) {
-      let x = (i - (frame * speed * 0.2) % 30);
+      let x = (i - Math.floor(totalProgress * 1.5) % 30);
       ctx.fillRect(x, 226, 16, 8);
     }
     ctx.fillStyle = '#90a4ae';
     ctx.fillRect(0, 222, canvas.width, 3);
     ctx.fillRect(0, 234, canvas.width, 3);
 
-    // Светофор (контроль правил)
-    let lightX = 650 - ((frame * 1.5) % 900);
-    if(lightX > -50 && lightX < canvas.width) {
-      ctx.fillStyle = '#111'; ctx.fillRect(lightX, 110, 18, 50);
-      ctx.fillStyle = lightState === 0 ? '#ff1744' : '#440000';
-      ctx.beginPath(); ctx.arc(lightX+9, 120, 5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = lightState === 2 ? '#00e676' : '#004400';
-      ctx.beginPath(); ctx.arc(lightX+9, 150, 5, 0, Math.PI*2); ctx.fill();
+    // --- МОДЕЛЬ ОСТАНОВКИ (когда близко) ---
+    if (distanceToNextStop < 250) {
+      let stationX = canvas.width / 2 + distanceToNextStop;
+      // Павильон остановки
+      ctx.fillStyle = '#37474f'; ctx.fillRect(stationX, 130, 120, 60); // крыша/стены
+      ctx.fillStyle = '#546e7a'; ctx.fillRect(stationX + 10, 140, 100, 40); // проем
+      ctx.fillStyle = '#78909c'; ctx.fillRect(stationX + 15, 175, 90, 5); // скамейка
+      ctx.fillStyle = '#ffca28'; ctx.font = 'bold 11px sans-serif';
+      ctx.fillText(`🚏 ${currentStops[stopIndex]}`, stationX + 5, 122);
 
-      // Проверка проезда на красный
-      if (lightState === 0 && lightX > 380 && lightX < 460 && speed > 5) {
-        addFine(300, "Проезд перекрестка на запрещающий сигнал светофора!");
-        lightState = 2; // сбрасываем светофор
-      }
+      // Ожидающие пассажиры
+      ctx.fillStyle = '#b0bec5';
+      ctx.fillRect(stationX + 30, 160, 8, 15);
+      ctx.fillRect(stationX + 50, 158, 8, 17);
+      ctx.fillRect(stationX + 70, 162, 8, 13);
     }
 
-    // --- ОТРИСОВКА ВАГОНА С ТВОИМ НОМЕРОМ ---
+    // --- СТАБИЛЬНЫЙ СВЕТОФОР ---
+    // Появляется на определенной дистанции мира
+    let lightWorldPos = 350;
+    let lightScreenX = lightWorldPos - (totalProgress % 800) + 400;
+    if(lightScreenX > -50 && lightScreenX < canvas.width + 50) {
+      ctx.fillStyle = '#111'; ctx.fillRect(lightScreenX, 100, 16, 45);
+      ctx.fillStyle = lightState === 0 ? '#ff1744' : '#440000';
+      ctx.beginPath(); ctx.arc(lightScreenX+8, 108, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = lightState === 2 ? '#00e676' : '#004400';
+      ctx.beginPath(); ctx.arc(lightScreenX+8, 136, 5, 0, Math.PI*2); ctx.fill();
+
+      // Штраф за проезд на красный (с защитой от спама)
+      if (lightState === 0 && lightScreenX > 320 && lightScreenX < 420 && speed > 3 && !redLightPenaltyGiven) {
+        addFine(300, "Проезд на запрещающий сигнал светофора!");
+        redLightPenaltyGiven = true;
+      }
+      if(lightScreenX > 500) redLightPenaltyGiven = false; // сброс для следующего светофора
+    }
+
+    // --- ТАТРА T3 С ТВОИМ НОМОМЕРОМ ---
     let tramX = canvas.width / 2 - 140;
     let bounce = speed > 0 ? Math.sin(frame / 2) * (speed / 25) : 0;
     let tramY = 125 + bounce;
@@ -360,17 +372,17 @@ function drawScene() {
     ctx.fillStyle = '#fff9c4'; ctx.fillRect(tramX, tramY + 5, 280, 40);
     ctx.fillStyle = '#37474f'; ctx.fillRect(tramX + 10, tramY - 5, 260, 10);
 
-    // Твой бортовой номер на кузове
+    // Четкий твой бортовой номер на борту
     ctx.fillStyle = '#b71c1c';
-    ctx.font = 'bold 13px monospace';
-    ctx.fillText(customTramNum, tramX + 125, tramY + 68);
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(customTramNum, tramX + 120, tramY + 68);
 
     // Номер маршрута спереди
     ctx.fillStyle = '#1b5e20'; ctx.fillRect(tramX + 12, tramY + 12, 22, 18);
     ctx.fillStyle = '#4caf50'; ctx.font = 'bold 12px sans-serif';
     ctx.fillText(currentRouteId, tramX + 17, tramY + 26);
 
-    // Окна и двери
+    // Окна
     ctx.fillStyle = '#81d4fa';
     let wx = tramX + 40;
     for(let w = 0; w < 6; w++) {
@@ -378,6 +390,7 @@ function drawScene() {
       wx += 35;
     }
 
+    // Двери с анимацией
     doorAnimProgress += (doorsOpen ? 0.05 : -0.05);
     doorAnimProgress = Math.max(0, Math.min(1, doorAnimProgress));
 
@@ -386,7 +399,7 @@ function drawScene() {
     ctx.fillRect(tramX + 190, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
     ctx.fillRect(tramX + 225, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
 
-    // Тележки
+    // Тележки и колеса
     ctx.fillStyle = '#37474f';
     ctx.fillRect(tramX + 50, tramY + 80, 50, 15);
     ctx.fillRect(tramX + 190, tramY + 80, 50, 15);
@@ -409,14 +422,6 @@ function drawScene() {
       ctx.beginPath();
       ctx.arc(tramX + 120 + (Math.random()*8-4), tramY - 75 + (Math.random()*4-2), 3, 0, Math.PI*2);
       ctx.fill();
-    }
-
-    // Остановка впереди визуально
-    if (distanceToNextStop < 150) {
-      ctx.fillStyle = '#ffca28';
-      ctx.fillRect(canvas.width - 200, 235, 170, 18);
-      ctx.fillStyle = '#000'; ctx.font = 'bold 12px sans-serif';
-      ctx.fillText(`🚏 Остановка: ${currentStops[stopIndex]}`, canvas.width - 190, 248);
     }
   } else {
     // Вид из кабины
@@ -443,14 +448,9 @@ function update() {
       speed = Math.max(0, speed - 0.1);
     }
 
-    // Проверка превышения скорости (> 60 км/ч)
-    suppressSpeeding = speed > 60 && frame % 60 === 0;
-    if (suppressSpeeding) {
-      addFine(150, "Превышение скоростного режима в городе!");
-    }
-
     if (speed > 0 && !isAtStation) {
-      let moved = speed * 0.04;
+      let moved = speed * 0.05;
+      totalProgress += moved;
       distanceToNextStop = Math.max(0, distanceToNextStop - moved);
       
       if (distanceToNextStop === 0) {
@@ -459,19 +459,21 @@ function update() {
       }
     }
 
-    // Смена светофора со временем
-    if(frame % 200 === 0) lightState = lightState === 2 ? 0 : 2;
+    // Смена светофоров со временем
+    if(frame % 250 === 0) lightState = lightState === 2 ? 0 : 2;
+
+    let netBalance = earnedMoney - fines;
 
     document.getElementById('speed').textContent = Math.round(speed);
     document.getElementById('passengers').textContent = passengers;
-    document.getElementById('money').textContent = money;
+    document.getElementById('netMoney').textContent = netBalance;
     document.getElementById('fines').textContent = `${fines} ₴`;
     document.getElementById('nextStop').textContent = currentStops[stopIndex] || "Конечная";
     document.getElementById('stopsProgress').textContent = `${stopIndex + 1} / ${currentStops.length}`;
 
     let statusText = 'В ПУТИ';
     if (doorsOpen) statusText = '🚪 ПОСАДКА (Нажмите E)';
-    else if (isAtStation) statusText = '🚏 ПРИБЫЛИ НА ОСТАНОВКУ (Откройте двери - E)';
+    else if (isAtStation) statusText = '🚏 ОСТАНОВКА (Откройте двери - E)';
     else if (handbrake) statusText = '🅿️ РУЧНИК';
     else if (speed === 0) statusText = 'СТОИМ';
     document.getElementById('statusBadge').textContent = statusText;
