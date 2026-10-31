@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>VERTBLOX - Одесский Трамвай (Симулятор)</title>
+<title>VERTBLOX - Одесский Трамвай Tatra T3</title>
 <style>
 *{box-sizing:border-box}
 body{
@@ -37,7 +37,7 @@ body{
   position:relative; margin-top:12px; border-radius:14px; overflow:hidden;
   border:2px solid #2b394a; box-shadow:0 10px 25px rgba(0,0,0,0.5);
 }
-canvas{display:block; width:100%; height:320px; background:#182533}
+canvas{display:block; width:100%; height:340px; background:#182533}
 
 .hud-overlay{
   position:absolute; top:12px; left:12px; right:12px;
@@ -87,7 +87,7 @@ canvas{display:block; width:100%; height:320px; background:#182533}
     <div class="top-bar">
       <div>
         <a href="games.html">← В КАТАЛОГ VERTBLOX</a>
-        <h2 style="margin:5px 0 0 0; color:#fff">🚋 Выбор Одесского маршрута</h2>
+        <h2 style="margin:5px 0 0 0; color:#fff">🚋 Выбор Одесского маршрута (Tatra T3)</h2>
       </div>
     </div>
     <div style="margin-top:20px">
@@ -126,7 +126,7 @@ canvas{display:block; width:100%; height:320px; background:#182533}
     </div>
 
     <div class="canvas-container">
-      <canvas id="view" width="920" height="320"></canvas>
+      <canvas id="view" width="920" height="340"></canvas>
       <div class="hud-overlay">
         <div class="hud-card">📍 Остановка: <span id="nextStop" style="color:#ffca28">-</span></div>
         <div class="hud-card" id="statusBadge">ГОТОВ К ОТПРАВЛЕНИЮ</div>
@@ -154,13 +154,12 @@ canvas{display:block; width:100%; height:320px; background:#182533}
 
     <div class="log-panel">
       <b>Бортовой журнал:</b>
-      <div class="log-content" id="log">Трамвай на конечной. Готовьтесь к посадке пассажиров.</div>
+      <div class="log-content" id="log">Вагон №3267 готов к выходу на линию. Нажмите W для отправления.</div>
     </div>
   </div>
 </div>
 
 <script>
-// База данных реальных маршрутов Одессы
 const ROUTES = {
   7: {
     name: "Маршрут №7 (Пересыпь — Поскот)",
@@ -187,9 +186,9 @@ let stopIndex = 0;
 let speed = 0, distanceToNext = 300, totalProgress = 0;
 let passengers = 0, money = 0, fines = 0;
 let doorsOpen = false, handbrake = false;
-let cameraMode = 0; // 0: Боковой 2.5D, 1: Вид из кабины
-let lightState = 2; // 0: Red, 1: Yellow, 2: Green
+let cameraMode = 0; // 0: Боковой 2.5D Tatra T3, 1: Вид из кабины
 let frame = 0, isAtStation = false;
+let doorAnimProgress = 0; // 0 - закрыты, 1 - открыты
 
 const keys = { w:false, s:false };
 let audioCtx = null;
@@ -225,11 +224,12 @@ function startRoute(id) {
   speed = 0;
   doorsOpen = false;
   isAtStation = false;
+  doorAnimProgress = 0;
 
   document.getElementById('routeTitle').textContent = ROUTES[id].name;
   document.getElementById('menuScreen').classList.remove('active');
   document.getElementById('gameScreen').classList.add('active');
-  addLog(`Вышел на линию: ${ROUTES[id].name}. Следующая остановка: ${currentStops[0]}`);
+  addLog(`Выход на линию: ${ROUTES[id].name}. Следующая остановка: ${currentStops[0]}`);
 }
 
 function returnToMenu() {
@@ -244,7 +244,7 @@ window.addEventListener('keydown', e => {
   }
   if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.w = true;
   if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.s = true;
-  if (e.code === 'Space') { playTone(880, 0.3, 'triangle'); addLog('🔔 Звонок трамвая'); }
+  if (e.code === 'Space') { playTone(880, 0.3, 'triangle'); addLog('🔔 Звонок вагона'); }
   if (e.code === 'KeyE') toggleDoors();
   if (e.code === 'KeyP') toggleHandbrake();
   if (e.code === 'KeyC') { cameraMode = (cameraMode + 1) % 2; addLog('📷 Камера переключена'); }
@@ -277,17 +277,17 @@ function toggleDoors() {
       addLog(`🏆 Маршрут успешно завершен! Общая выручка: ${money} ₴`);
       stopIndex = currentStops.length - 1;
     }
-    distanceToNext = 300; // дистанция до следующей остановки
+    distanceToNext = 300;
   }
 }
 
 function toggleHandbrake() {
-  if (speed > 2) { addLog('⚠️ Сначала полностью остановите трамвай!'); return; }
+  if (speed > 2) { addLog('⚠️ Сначала полностью остановите вагон!'); return; }
   handbrake = !handbrake;
   addLog(handbrake ? '🅿️ Ручник затянут' : '🅿️ Ручник снят');
 }
 
-// Отрисовка Canvas
+// Отрисовка детализированной Tatra T3 на Canvas
 const canvas = document.getElementById('view');
 const ctx = canvas.getContext('2d');
 
@@ -295,51 +295,124 @@ function drawScene() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (cameraMode === 0) {
-    // Небо и фон
-    let skyGrad = ctx.createLinearGradient(0,0,0,180);
-    skyGrad.addColorStop(0, '#0f2027'); skyGrad.addColorStop(1, '#203a43');
-    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, 180);
+    // --- ПАРАЛЛАКС ФОН (Одесский пейзаж) ---
+    let skyGrad = ctx.createLinearGradient(0,0,0,190);
+    skyGrad.addColorStop(0, '#102030'); skyGrad.addColorStop(1, '#3a506b');
+    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, 190);
 
-    // Дома (параллакс)
-    ctx.fillStyle = '#142834';
-    for (let i = -100; i < canvas.width + 100; i += 120) {
-      let x = (i - (totalProgress * 0.3) % 120);
-      ctx.fillRect(x, 80, 80, 100);
+    // Дома и столбы в движении
+    ctx.fillStyle = '#1c2d3e';
+    for (let i = -100; i < canvas.width + 100; i += 140) {
+      let x = (i - (totalProgress * 0.35) % 140);
+      ctx.fillRect(x, 70, 90, 120);
     }
 
-    // Земля и рельсы
-    ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 180, canvas.width, 140);
-    ctx.fillStyle = '#78909c'; ctx.fillRect(0, 215, canvas.width, 4); ctx.fillRect(0, 222, canvas.width, 4);
+    // Дорожное полотно и земля
+    ctx.fillStyle = '#263238'; ctx.fillRect(0, 190, canvas.width, 150);
+    
+    // Рельсы и шпалы
+    ctx.fillStyle = '#455a64';
+    for (let i = -20; i < canvas.width + 20; i += 30) {
+      let x = (i - (totalProgress * 1.5) % 30);
+      ctx.fillRect(x, 226, 16, 8); // Шпалы
+    }
+    ctx.fillStyle = '#90a4ae';
+    ctx.fillRect(0, 222, canvas.width, 3);
+    ctx.fillRect(0, 234, canvas.width, 3);
 
-    // Трамвай (Татра T3)
-    let tramX = canvas.width / 2 - 100;
-    let tramY = 145;
-    ctx.fillStyle = '#d32f2f'; ctx.fillRect(tramX, tramY + 25, 200, 40);
-    ctx.fillStyle = '#fff8e1'; ctx.fillRect(tramX, tramY, 200, 25);
+    // --- ОТРИСОВКА ТАТРА T3 (Боковой вид по чертежу) ---
+    let tramX = canvas.width / 2 - 140;
+    // Анимация покачивания корпуса при движении
+    let bounce = speed > 0 ? Math.sin(frame / 2) * (speed / 25) : 0;
+    let tramY = 125 + bounce;
+
+    // Нижняя красная полоса корпуса
+    ctx.fillStyle = '#c62828';
+    ctx.fillRect(tramX, tramY + 45, 280, 40);
+
+    // Верхняя кремовая полоса корпуса
+    ctx.fillStyle = '#fff9c4';
+    ctx.fillRect(tramX, tramY + 5, 280, 40);
+
+    // Крыша (темно-серая)
+    ctx.fillStyle = '#37474f';
+    ctx.fillRect(tramX + 10, tramY - 5, 260, 10);
+
+    // Бортовой номер по чертежу
+    ctx.fillStyle = '#b71c1c';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText('3267', tramX + 130, tramY + 68);
+
+    // Номер маршрута спереди
+    ctx.fillStyle = '#1b5e20';
+    ctx.fillRect(tramX + 12, tramY + 12, 22, 18);
+    ctx.fillStyle = '#4caf50';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(currentRouteId, tramX + 17, tramY + 26);
+
+    // Окна вагона
     ctx.fillStyle = '#81d4fa';
-    for(let w=15; w<180; w+=35) ctx.fillRect(tramX + w, tramY + 5, 25, 15);
+    let windowWidths = [30, 30, 30, 30, 30, 30];
+    let wx = tramX + 40;
+    for(let w = 0; w < 6; w++) {
+      ctx.fillRect(wx, tramY + 12, 28, 25);
+      wx += 35;
+    }
 
-    // Колеса
+    // Гармошки дверей (с анимацией открытия `doorAnimProgress`)
+    doorAnimProgress += (doorsOpen ? 0.05 : -0.05);
+    doorAnimProgress = Math.max(0, Math.min(1, doorAnimProgress));
+
     ctx.fillStyle = '#263238';
-    ctx.beginPath(); ctx.arc(tramX + 40, tramY + 68, 10, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(tramX + 160, tramY + 68, 10, 0, Math.PI*2); ctx.fill();
+    // Дверная пара 1
+    ctx.fillRect(tramX + 85, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
+    // Дверная пара 2
+    ctx.fillRect(tramX + 190, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
+    ctx.fillRect(tramX + 225, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
 
-    // Платформа остановки, когда близко
-    if (distanceToNext < 50) {
+    // Тележки и колеса (с вращением при езде)
+    ctx.fillStyle = '#37474f';
+    ctx.fillRect(tramX + 50, tramY + 80, 50, 15);
+    ctx.fillRect(tramX + 190, tramY + 80, 50, 15);
+
+    ctx.fillStyle = '#212121';
+    ctx.beginPath(); ctx.arc(tramX + 65, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(tramX + 90, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(tramX + 205, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(tramX + 230, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
+
+    // Пантограф (Токоприемник) на крыше
+    ctx.strokeStyle = '#b71c1c'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(tramX + 140, tramY - 5);
+    ctx.lineTo(tramX + 160, tramY - 45);
+    ctx.lineTo(tramX + 120, tramY - 75);
+    ctx.stroke();
+
+    // Искры на контактном проводе
+    if (speed > 5 && Math.random() < 0.3) {
+      ctx.fillStyle = '#00e5ff';
+      ctx.beginPath();
+      ctx.arc(tramX + 120 + (Math.random()*8-4), tramY - 75 + (Math.random()*4-2), 3, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // Платформа остановки
+    if (distanceToNext < 60) {
       ctx.fillStyle = '#ffca28';
-      ctx.fillRect(canvas.width - 150, 230, 120, 15);
-      ctx.fillStyle = '#000'; ctx.font = 'bold 11px sans-serif';
-      ctx.fillText(`🚏 ${currentStops[stopIndex]}`, canvas.width - 140, 242);
+      ctx.fillRect(canvas.width - 180, 235, 150, 16);
+      ctx.fillStyle = '#000'; ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(`🚏 ${currentStops[stopIndex]}`, canvas.width - 170, 248);
     }
   } else {
-    // Вид из кабины
+    // --- ВИД ИЗ КАБИНЫ ---
     ctx.fillStyle = '#102027'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = '#b0bec5'; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.moveTo(canvas.width/2 - 20, 140); ctx.lineTo(100, 320); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(canvas.width/2 + 20, 140); ctx.lineTo(820, 320); ctx.stroke();
-    ctx.fillStyle = '#263238'; ctx.fillRect(0, 240, canvas.width, 80);
-    ctx.fillStyle = '#00e676'; ctx.font = 'bold 20px monospace';
-    ctx.fillText(`СКОРОСТЬ: ${Math.round(speed)} КМ/Ч`, canvas.width/2 - 110, 290);
+    ctx.beginPath(); ctx.moveTo(canvas.width/2 - 20, 140); ctx.lineTo(100, 340); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(canvas.width/2 + 20, 140); ctx.lineTo(820, 340); ctx.stroke();
+    ctx.fillStyle = '#263238'; ctx.fillRect(0, 250, canvas.width, 90);
+    ctx.fillStyle = '#00e676'; ctx.font = 'bold 22px monospace';
+    ctx.fillText(`СКОРОСТЬ: ${Math.round(speed)} КМ/Ч`, canvas.width/2 - 120, 300);
   }
 }
 
@@ -348,7 +421,6 @@ function update() {
   frame++;
 
   if (document.getElementById('gameScreen').classList.contains('active')) {
-    // Движение
     if (keys.w && !doorsOpen && !handbrake) {
       speed = Math.min(75, speed + 0.5);
     } else if (keys.s) {
@@ -367,7 +439,6 @@ function update() {
       }
     }
 
-    // Обновление UI
     document.getElementById('speed').textContent = Math.round(speed);
     document.getElementById('passengers').textContent = passengers;
     document.getElementById('money').textContent = money;
