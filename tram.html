@@ -95,24 +95,12 @@ canvas{display:block; width:100%; height:340px; background:#182533}
       </div>
     </div>
     <div style="margin-top:20px">
-      <p style="color:#8b9dc3">Выберите маршрут электротранспорта Одессы:</p>
+      <p style="color:#8b9dc3">Выберите маршрут:</p>
       <div class="routes-grid">
-        <div class="route-card" onclick="startRoute(7)">
-          <h3>Маршрут №7</h3>
-          <p>Пересыпский мост — ул. Паустовского (Поскот)</p>
-        </div>
-        <div class="route-card" onclick="startRoute(18)">
-          <h3>Маршрут №18</h3>
-          <p>16-я ст. Большого Фонтана — Куликово поле</p>
-        </div>
-        <div class="route-card" onclick="startRoute(27)">
-          <h3>Маршрут №27</h3>
-          <p>Рыбпорт — Пересыпский мост (Черноморка)</p>
-        </div>
-        <div class="route-card" onclick="startRoute(20)">
-          <h3>Маршрут №20</h3>
-          <p>Хаджибейский лиман — Зерновой переулок</p>
-        </div>
+        <div class="route-card" onclick="startRoute(7)"><h3>Маршрут №7</h3><p>Пересыпь — Поскот</p></div>
+        <div class="route-card" onclick="startRoute(18)"><h3>Маршрут №18</h3><p>Куликово поле — 411-я батарея</p></div>
+        <div class="route-card" onclick="startRoute(27)"><h3>Маршрут №27</h3><p>Рыбпорт — Пересыпь</p></div>
+        <div class="route-card" onclick="startRoute(20)"><h3>Маршрут №20</h3><p>Хаджибей — Зерновой</p></div>
       </div>
     </div>
   </div>
@@ -120,27 +108,22 @@ canvas{display:block; width:100%; height:340px; background:#182533}
   <!-- ИГРОВОЙ ЭКРАН -->
   <div id="gameScreen" class="game-screen">
     <div class="top-bar">
-      <div>
-        <button onclick="returnToMenu()" style="background:#2b394a; border:0; color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer">В депо</button>
-        <span id="routeTitle" style="margin-left:10px; font-weight:bold; color:#ffca28">Маршрут №7</span>
-      </div>
-      <div style="text-align:right">
-        <div class="money-badge">Баланс: <span id="netMoney">0</span> <small style="font-size:14px">₴</small></div>
-      </div>
+      <div><button onclick="returnToMenu()">В депо</button><span id="routeTitle">Маршрут №7</span></div>
+      <div class="money-badge">Баланс: <span id="netMoney">0</span> <small>₴</small></div>
     </div>
 
     <div class="canvas-container">
       <canvas id="view" width="920" height="340"></canvas>
       <div class="hud-overlay">
-        <div class="hud-card">🚏 Остановка: <span id="nextStop" style="color:#ffca28">-</span></div>
+        <div class="hud-card">🚏 Остановка: <span id="nextStop">-</span></div>
         <div class="hud-card" id="statusBadge">ГОТОВ К ОТПРАВЛЕНИЮ</div>
       </div>
     </div>
 
     <div class="metrics-grid">
-      <div class="metric"><small>Скорость</small><strong id="speed">0</strong> <span style="font-size:11px">км/ч</span></div>
+      <div class="metric"><small>Скорость</small><strong id="speed">0</strong> км/ч</div>
       <div class="metric"><small>Пассажиры</small><strong id="passengers">0</strong></div>
-      <div class="metric"><small>Штрафы</small><strong id="fines" style="color:#ef5350">0 ₴</strong></div>
+      <div class="metric"><small>Штрафы</small><strong id="fines">0 ₴</strong></div>
       <div class="metric"><small>Остановки</small><strong id="stopsProgress">0 / 0</strong></div>
     </div>
 
@@ -157,35 +140,119 @@ canvas{display:block; width:100%; height:340px; background:#182533}
     </div>
 
     <div class="log-panel">
-      <b>Бортовой журнал:</b>
-      <div class="log-content" id="log">Вагон готов к выходу на линию. Нажмите W для отправления.</div>
+      <b>Журнал:</b>
+      <div class="log-content" id="log">Вагон готов. Нажмите W.</div>
     </div>
   </div>
 </div>
 
 <script>
-// --- ПОДКЛЮЧЕНИЕ ТВОЕГО ФАЙЛА КАРТИНКИ ---
+// --- ПОДКЛЮЧЕНИЕ ВСЕХ 6 СПРАЙТОВ (ostA - ostF) ---
 const assets = {
   tram: new Image(),
-  station: new Image(),
-  bg: new Image()
+  bg: new Image(),
+  stationSprites: {
+    ostA: new Image(), // Новая
+    ostB: new Image(), // Чистая
+    ostC: new Image(), // Потресканная
+    ostD: new Image(), // Как на фото
+    ostE: new Image(), // Без крыши
+    ostF: new Image()  // Руины
+  }
 };
 
-// Путь к твоему загруженному файлу TatraT3_4021.png
 assets.tram.src = 'TatraT3_4021.png';
-assets.station.src = 'images/station.png';
+assets.stationSprites.ostA.src = 'ostA.png'; 
+assets.stationSprites.ostB.src = 'ostB.png'; 
+assets.stationSprites.ostC.src = 'ostC.png'; 
+assets.stationSprites.ostD.src = 'ostD.png'; 
+assets.stationSprites.ostE.src = 'ostE.png'; 
+assets.stationSprites.ostF.src = 'ostF.png';  
 assets.bg.src = 'images/bg.png';
 
-let assetsLoaded = { tram: false, station: false, bg: false };
-assets.tram.onload = () => assetsLoaded.tram = true;
-assets.station.onload = () => assetsLoaded.station = true;
-assets.bg.onload = () => assetsLoaded.bg = true;
+let assetsLoaded = { 
+  tram: false, 
+  bg: false, 
+  station: { ostA: false, ostB: false, ostC: false, ostD: false, ostE: false, ostF: false } 
+};
 
+assets.tram.onload = () => assetsLoaded.tram = true;
+assets.bg.onload = () => assetsLoaded.bg = true;
+assets.stationSprites.ostA.onload = () => assetsLoaded.station.ostA = true;
+assets.stationSprites.ostB.onload = () => assetsLoaded.station.ostB = true;
+assets.stationSprites.ostC.onload = () => assetsLoaded.station.ostC = true;
+assets.stationSprites.ostD.onload = () => assetsLoaded.station.ostD = true;
+assets.stationSprites.ostE.onload = () => assetsLoaded.station.ostE = true;
+assets.stationSprites.ostF.onload = () => assetsLoaded.station.ostF = true;
+
+// --- МАРШРУТЫ С РАНДОМНЫМ РАСПРЕДЕЛЕНИЕМ СТИЛЕЙ ОСТАНОВОК (ostA-ostF) ---
 const ROUTES = {
-  7: { name: "Маршрут №7", stops: ["Пересыпский мост", "Зоопарковая", "Лузановка", "Пляж Лузановка", "Капитанская", "Марсельская", "Заболотного", "Днепродорога", "Ул. Паустовского"] },
-  18: { name: "Маршрут №18", stops: ["Куликово поле", "Пантелеймоновская", "Пироговская", "Армейская", "Сегедская", "Шевченко", "8-я ст. Фонтана", "11-я ст. Фонтана", "16-я ст. Фонтана"] },
-  27: { name: "Маршрут №27", stops: ["Пересыпский мост", "Цукрзавод", "Зоопарковая", "Морпорт", "Дальницкая", "Столбовая", "Рыбпорт", "Станция Черноморка"] },
-  20: { name: "Маршрут №20", stops: ["Зерновой переулок", "Сахарный завод", "Кривая Балка", "Промзона", "Хаджибейский лиман"] }
+  7: { 
+    name: "Маршрут №7", 
+    stops: [
+      { name: "Пересыпский мост", style: 'ostA' },
+      { name: "Зоопарковая", style: 'ostB' },
+      { name: "Лузановка", style: 'ostC' },
+      { name: "Пляж Лузановка", style: 'ostD' },
+      { name: "Капитанская", style: 'ostE' },
+      { name: "Марсельская", style: 'ostF' },
+      { name: "Заболотного", style: 'ostA' },
+      { name: "Днепродорога", style: 'ostC' },
+      { name: "Ул. Паустовского", style: 'ostB' }
+    ] 
+  },
+  18: { 
+    name: "Маршрут №18", 
+    stops: [
+      { name: "Куликово поле (конечная)", style: 'ostA' },
+      { name: "ул. Среднефонтанская", style: 'ostB' },
+      { name: "1-я станция Большого Фонтана", style: 'ostC' },
+      { name: "2-я станция Большого Фонтана", style: 'ostD' },
+      { name: "3-я станция Большого Фонтана", style: 'ostE' },
+      { name: "ул. Армейская", style: 'ostF' },
+      { name: "4-я станция Большого Фонтана", style: 'ostA' },
+      { name: "5-я станция Большого Фонтана", style: 'ostC' },
+      { name: "6-я станция Большого Фонтана", style: 'ostD' },
+      { name: "ул. Петрашевского", style: 'ostB' },
+      { name: "7-я станция Большого Фонтана", style: 'ostE' },
+      { name: "8-я станция Большого Фонтана", style: 'ostF' },
+      { name: "9-я станция Большого Фонтана", style: 'ostA' },
+      { name: "10-я станция Большого Фонтана", style: 'ostB' },
+      { name: "11-я станция Большого Фонтана", style: 'ostC' },
+      { name: "12-я станция Большого Фонтана", style: 'ostD' },
+      { name: "13-я станция Большого Фонтана", style: 'ostE' },
+      { name: "14-я станция Большого Фонтана", style: 'ostF' },
+      { name: "15-я станция Большого Фонтана", style: 'ostA' },
+      { name: "16-я станция Большого Фонтана", style: 'ostB' },
+      { name: "Санаторий «Зеленая горка»", style: 'ostC' },
+      { name: "База отдыха «Мрия»", style: 'ostD' },
+      { name: "Санаторий «Жемчужина»", style: 'ostE' },
+      { name: "Дом творчества писателей", style: 'ostF' },
+      { name: "ул. Саксаганского", style: 'ostA' },
+      { name: "ул. Вильямса", style: 'ostC' },
+      { name: "Санаторий «Якорь»", style: 'ostB' },
+      { name: "ул. Долгая", style: 'ostD' },
+      { name: "ул. Дачная / ул. Львовская", style: 'ostE' },
+      { name: "Мемориал 411-й батареи (Дача Ковалевского)", style: 'ostA' }
+    ] 
+  },
+  27: { 
+    name: "Маршрут №27", 
+    stops: [
+      { name: "Пересыпский мост", style: 'ostA' },
+      { name: "Цукрзавод", style: 'ostC' },
+      { name: "Рыбпорт", style: 'ostE' },
+      { name: "Станция Черноморка", style: 'ostF' }
+    ] 
+  },
+  20: { 
+    name: "Маршрут №20", 
+    stops: [
+      { name: "Зерновой переулок", style: 'ostA' },
+      { name: "Кривая Балка", style: 'ostD' },
+      { name: "Хаджибейский лиман", style: 'ostF' }
+    ] 
+  }
 };
 
 let currentRouteId = 7;
@@ -196,10 +263,8 @@ let customTramNum = "4444_F";
 let speed = 0, totalProgress = 0, distanceToNextStop = 600;
 let passengers = 0, earnedMoney = 0, fines = 0;
 let doorsOpen = false, handbrake = false;
-let cameraMode = 0; 
-let lightState = 2; // 0: Red, 2: Green
+let lightState = 2; 
 let frame = 0, isAtStation = false;
-let doorAnimProgress = 0; 
 let redLightPenaltyGiven = false;
 
 const keys = { w:false, s:false };
@@ -212,7 +277,7 @@ function playTone(freq, duration, type='sine') {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = type; osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
     osc.connect(gain); gain.connect(audioCtx.destination);
     osc.start(); osc.stop(audioCtx.currentTime + duration);
@@ -236,13 +301,8 @@ function startRoute(id) {
   stopIndex = 0;
   totalProgress = 0;
   distanceToNextStop = 600;
-  passengers = 0;
-  earnedMoney = 0;
-  fines = 0;
-  speed = 0;
-  doorsOpen = false;
-  isAtStation = false;
-  doorAnimProgress = 0;
+  passengers = 0; earnedMoney = 0; fines = 0; speed = 0;
+  doorsOpen = false; isAtStation = false;
   redLightPenaltyGiven = false;
 
   let inputVal = document.getElementById('tramNumberInput').value.trim();
@@ -251,7 +311,7 @@ function startRoute(id) {
   document.getElementById('routeTitle').textContent = ROUTES[id].name;
   document.getElementById('menuScreen').classList.remove('active');
   document.getElementById('gameScreen').classList.add('active');
-  addLog(`Вагон №${customTramNum} вышел на ${ROUTES[id].name}. Следующая: ${currentStops[0]}`);
+  addLog(`Вагон №${customTramNum} вышел на ${ROUTES[id].name}. Первая: ${currentStops[0].name}`);
 }
 
 function returnToMenu() {
@@ -259,251 +319,159 @@ function returnToMenu() {
   document.getElementById('menuScreen').classList.add('active');
 }
 
-// Управление клавиатурой
+// Управление
 window.addEventListener('keydown', e => {
-  if(['ArrowUp','ArrowDown','Space','KeyW','KeyS','KeyE','KeyP','KeyC'].includes(e.code)) {
-    if(e.code !== 'F5' && e.code !== 'F12') e.preventDefault();
-  }
+  if(['ArrowUp','ArrowDown','Space','KeyW','KeyS','KeyE','KeyP','KeyC'].includes(e.code)) e.preventDefault();
   if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.w = true;
   if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.s = true;
-  if (e.code === 'Space') { playTone(880, 0.3, 'triangle'); addLog('🔔 Звонок вагона'); }
+  if (e.code === 'Space') { playTone(880, 0.3, 'triangle'); addLog('🔔 Звонок'); }
   if (e.code === 'KeyE') toggleDoors();
   if (e.code === 'KeyP') toggleHandbrake();
-  if (e.code === 'KeyC') { cameraMode = (cameraMode + 1) % 2; addLog('📷 Камера переключена'); }
 });
-
 window.addEventListener('keyup', e => {
   if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.w = false;
   if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.s = false;
 });
 
 function toggleDoors() {
-  if (speed > 1) { addLog('⚠️ Опасно! Нельзя открывать двери на ходу.'); return; }
-  if (!isAtStation) { addLog('⚠️ Здесь нет остановочного пункта!'); return; }
+  if (speed > 1) return;
+  if (!isAtStation) return;
 
   doorsOpen = !doorsOpen;
   playTone(250, 0.2);
 
   if (doorsOpen) {
-    let leaving = Math.floor(Math.random() * (passengers + 1));
-    let entering = Math.floor(Math.random() * 10) + 5;
-    passengers = Math.max(0, passengers - leaving) + entering;
+    let entering = Math.floor(Math.random() * 8) + 3;
+    passengers += entering;
     let earned = entering * 10;
     earnedMoney += earned;
-    addLog(`🚪 Посадка на ст. "${currentStops[stopIndex]}". Выручка: +${earned} ₴`);
+    addLog(`🚪 Посадка ст. "${currentStops[stopIndex].name}". +${earned} ₴`);
   } else {
-    addLog(`🚪 Остановка "${currentStops[stopIndex]}" пройдена.`);
     isAtStation = false;
     stopIndex++;
-    
     if (stopIndex >= currentStops.length) {
       let net = earnedMoney - fines;
-      addLog(`🏆 Маршрут пройден! Выручка: ${earnedMoney} ₴ | Штрафы: ${fines} ₴ | Итог: ${net} ₴`);
+      addLog(`🏆 Финиш! Выручка: ${earnedMoney} | Штрафы: ${fines} | Итог: ${net} ₴`);
       stopIndex = currentStops.length - 1;
-    } else {
-      distanceToNextStop = 600;
-    }
+    } else { distanceToNextStop = 600; }
   }
 }
 
 function toggleHandbrake() {
-  if (speed > 2) { addLog('⚠️ Сначала полностью остановите вагон!'); return; }
+  if (speed > 2) return;
   handbrake = !handbrake;
-  addLog(handbrake ? '🅿️ Ручник затянут' : '🅿️ Ручник снят');
+  addLog(handbrake ? '🅿️ Ручник' : '🅿️ Ручник снят');
 }
 
-// Отрисовка Canvas
+// Canvas
 const canvas = document.getElementById('view');
 const ctx = canvas.getContext('2d');
 
 function drawScene() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (cameraMode === 0) {
-    // 1. Небо и дальний фон
-    if (assetsLoaded.bg) {
-      let bgX = -(totalProgress * 0.4) % canvas.width;
-      ctx.drawImage(assets.bg, bgX, 0, canvas.width, 190);
-      ctx.drawImage(assets.bg, bgX + canvas.width, 0, canvas.width, 190);
-    } else {
-      let skyGrad = ctx.createLinearGradient(0,0,0,190);
-      skyGrad.addColorStop(0, '#102030'); skyGrad.addColorStop(1, '#3a506b');
-      ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, 190);
-
-      ctx.fillStyle = '#1c2d3e';
-      for (let i = -150; i < canvas.width + 150; i += 160) {
-        let x = ((i - Math.floor(totalProgress * 0.4)) % (canvas.width + 300));
-        if(x < -150) x += canvas.width + 300;
-        ctx.fillRect(x, 70, 100, 120);
-      }
-    }
-
-    // 2. Рельсы и дорога
-    ctx.fillStyle = '#263238'; ctx.fillRect(0, 190, canvas.width, 150);
-    ctx.fillStyle = '#455a64';
-    for (let i = -20; i < canvas.width + 20; i += 30) {
-      let x = (i - Math.floor(totalProgress * 1.5) % 30);
-      ctx.fillRect(x, 226, 16, 8);
-    }
-    ctx.fillStyle = '#90a4ae';
-    ctx.fillRect(0, 222, canvas.width, 3);
-    ctx.fillRect(0, 234, canvas.width, 3);
-
-    // 3. Модель остановки
-    if (distanceToNextStop < 250) {
-      let stationX = canvas.width / 2 + distanceToNextStop;
-      if (assetsLoaded.station) {
-        ctx.drawImage(assets.station, stationX, 120, 140, 80);
-      } else {
-        ctx.fillStyle = '#37474f'; ctx.fillRect(stationX, 130, 120, 60);
-        ctx.fillStyle = '#546e7a'; ctx.fillRect(stationX + 10, 140, 100, 40);
-        ctx.fillStyle = '#78909c'; ctx.fillRect(stationX + 15, 175, 90, 5);
-      }
-      ctx.fillStyle = '#ffca28'; ctx.font = 'bold 12px sans-serif';
-      ctx.fillText(`🚏 ${currentStops[stopIndex]}`, stationX + 5, 115);
-    }
-
-    // 4. Светофор
-    let lightWorldPos = 350;
-    let lightScreenX = lightWorldPos - (totalProgress % 800) + 400;
-    if(lightScreenX > -50 && lightScreenX < canvas.width + 50) {
-      ctx.fillStyle = '#111'; ctx.fillRect(lightScreenX, 100, 16, 45);
-      ctx.fillStyle = lightState === 0 ? '#ff1744' : '#440000';
-      ctx.beginPath(); ctx.arc(lightScreenX+8, 108, 5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = lightState === 2 ? '#00e676' : '#004400';
-      ctx.beginPath(); ctx.arc(lightScreenX+8, 136, 5, 0, Math.PI*2); ctx.fill();
-
-      if (lightState === 0 && lightScreenX > 320 && lightScreenX < 420 && speed > 3 && !redLightPenaltyGiven) {
-        addFine(300, "Проезд на запрещающий сигнал светофора!");
-        redLightPenaltyGiven = true;
-      }
-      if(lightScreenX > 500) redLightPenaltyGiven = false;
-    }
-
-    // 5. Отрисовка трамвая Tatra T3
-    let tramX = canvas.width / 2 - 140;
-    let bounce = speed > 0 ? Math.sin(frame / 2) * (speed / 25) : 0;
-    let tramY = 125 + bounce;
-
-    if (assetsLoaded.tram) {
-      // Рисуем твой сохраненный PNG вагон
-      ctx.drawImage(assets.tram, tramX, tramY - 20, 300, 110);
-      ctx.fillStyle = '#ffca28';
-      ctx.font = 'bold 14px monospace';
-      ctx.fillText(customTramNum, tramX + 130, tramY + 52);
-    } else {
-      // Резервный векторный трамвай
-      ctx.fillStyle = '#c62828'; ctx.fillRect(tramX, tramY + 45, 280, 40);
-      ctx.fillStyle = '#fff9c4'; ctx.fillRect(tramX, tramY + 5, 280, 40);
-      ctx.fillStyle = '#37474f'; ctx.fillRect(tramX + 10, tramY - 5, 260, 10);
-
-      ctx.fillStyle = '#b71c1c';
-      ctx.font = 'bold 14px monospace';
-      ctx.fillText(customTramNum, tramX + 120, tramY + 68);
-
-      ctx.fillStyle = '#1b5e20'; ctx.fillRect(tramX + 12, tramY + 12, 22, 18);
-      ctx.fillStyle = '#4caf50'; ctx.font = 'bold 12px sans-serif';
-      ctx.fillText(currentRouteId, tramX + 17, tramY + 26);
-
-      ctx.fillStyle = '#81d4fa';
-      let wx = tramX + 40;
-      for(let w = 0; w < 6; w++) {
-        ctx.fillRect(wx, tramY + 12, 28, 25);
-        wx += 35;
-      }
-
-      doorAnimProgress += (doorsOpen ? 0.05 : -0.05);
-      doorAnimProgress = Math.max(0, Math.min(1, doorAnimProgress));
-
-      ctx.fillStyle = '#263238';
-      ctx.fillRect(tramX + 85, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
-      ctx.fillRect(tramX + 190, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
-      ctx.fillRect(tramX + 225, tramY + 12, 18 * (1 - doorAnimProgress * 0.7), 65);
-
-      ctx.fillStyle = '#37474f';
-      ctx.fillRect(tramX + 50, tramY + 80, 50, 15);
-      ctx.fillRect(tramX + 190, tramY + 80, 50, 15);
-      ctx.fillStyle = '#212121';
-      ctx.beginPath(); ctx.arc(tramX + 65, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(tramX + 90, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(tramX + 205, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(tramX + 230, tramY + 95, 10, 0, Math.PI*2); ctx.fill();
-
-      ctx.strokeStyle = '#b71c1c'; ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(tramX + 140, tramY - 5);
-      ctx.lineTo(tramX + 160, tramY - 45);
-      ctx.lineTo(tramX + 120, tramY - 75);
-      ctx.stroke();
-
-      if (speed > 5 && Math.random() < 0.3) {
-        ctx.fillStyle = '#00e5ff';
-        ctx.beginPath();
-        ctx.arc(tramX + 120 + (Math.random()*8-4), tramY - 75 + (Math.random()*4-2), 3, 0, Math.PI*2);
-        ctx.fill();
-      }
-    }
+  // Дальний фон
+  if (assetsLoaded.bg) {
+    let bgX = -(totalProgress * 0.4) % canvas.width;
+    ctx.drawImage(assets.bg, bgX, 0, canvas.width, 190);
+    ctx.drawImage(assets.bg, bgX + canvas.width, 0, canvas.width, 190);
   } else {
-    // Вид из кабины (FPV)
-    ctx.fillStyle = '#102027'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = '#b0bec5'; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.moveTo(canvas.width/2 - 20, 140); ctx.lineTo(100, 340); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(canvas.width/2 + 20, 140); ctx.lineTo(820, 340); ctx.stroke();
-    ctx.fillStyle = '#263238'; ctx.fillRect(0, 250, canvas.width, 90);
-    ctx.fillStyle = '#00e676'; ctx.font = 'bold 22px monospace';
-    ctx.fillText(`СКОРОСТЬ: ${Math.round(speed)} КМ/Ч`, canvas.width/2 - 120, 300);
+    let gradient = ctx.createLinearGradient(0,0,0,190);
+    gradient.addColorStop(0, '#102030'); gradient.addColorStop(1, '#3a506b');
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, 190);
+  }
+
+  // Рельсы и дорога
+  ctx.fillStyle = '#263238'; ctx.fillRect(0, 190, canvas.width, 150);
+  ctx.fillStyle = '#455a64';
+  for (let i = -20; i < canvas.width + 20; i += 30) {
+    let x = (i - Math.floor(totalProgress * 1.5) % 30);
+    ctx.fillRect(x, 226, 16, 8);
+  }
+  ctx.fillStyle = '#90a4ae'; ctx.fillRect(0, 222, canvas.width, 3); ctx.fillRect(0, 234, canvas.width, 3);
+
+  // Остановка
+  if (distanceToNextStop < 250) {
+    let stationX = canvas.width / 2 + distanceToNextStop;
+    const currentStop = currentStops[stopIndex];
+    const styleKey = currentStop.style;
+    const sprite = assets.stationSprites[styleKey];
+
+    if (assetsLoaded.station[styleKey]) {
+      ctx.drawImage(sprite, stationX, 110, 180, 100); 
+    } else {
+      ctx.fillStyle = '#ffca28'; ctx.fillRect(stationX, 130, 120, 60);
+    }
+    ctx.fillStyle = '#ffca28'; ctx.font = 'bold 12px sans-serif';
+    ctx.fillText(`🚏 ${currentStop.name}`, stationX + 5, 105);
+  }
+
+  // Светофор
+  let lightWorldPos = 350;
+  let lightScreenX = lightWorldPos - (totalProgress % 800) + 400;
+  if(lightScreenX > -50 && lightScreenX < canvas.width + 50) {
+    ctx.fillStyle = '#111'; ctx.fillRect(lightScreenX, 100, 16, 45);
+    ctx.fillStyle = lightState === 0 ? '#ff1744' : '#440000';
+    ctx.beginPath(); ctx.arc(lightScreenX+8, 108, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = lightState === 2 ? '#00e676' : '#004400';
+    ctx.beginPath(); ctx.arc(lightScreenX+8, 136, 5, 0, Math.PI*2); ctx.fill();
+
+    if (lightState === 0 && lightScreenX > 320 && lightScreenX < 420 && speed > 3 && !redLightPenaltyGiven) {
+      addFine(300, "Проезд на красный сигнал светофора!"); redLightPenaltyGiven = true;
+    }
+    if(lightScreenX > 500) redLightPenaltyGiven = false;
+  }
+
+  // Трамвай
+  let tramX = canvas.width / 2 - 140;
+  let bounce = speed > 0 ? Math.sin(frame / 2) * (speed / 25) : 0;
+  let tramY = 125 + bounce;
+
+  if (assetsLoaded.tram) {
+    ctx.drawImage(assets.tram, tramX, tramY - 20, 300, 110);
+    ctx.fillStyle = '#ffca28'; ctx.font = 'bold 14px monospace';
+    ctx.fillText(customTramNum, tramX + 130, tramY + 52);
+  } else {
+    ctx.fillStyle = '#c62828'; ctx.fillRect(tramX, tramY + 45, 280, 40);
   }
 }
 
-// Игровой цикл
+// Цикл
 function update() {
   frame++;
-
   if (document.getElementById('gameScreen').classList.contains('active')) {
-    if (keys.w && !doorsOpen && !handbrake) {
-      speed = Math.min(75, speed + 0.5);
-    } else if (keys.s) {
-      speed = Math.max(0, speed - 1.2);
-    } else {
-      speed = Math.max(0, speed - 0.1);
-    }
+    if (keys.w && !doorsOpen && !handbrake) speed = Math.min(75, speed + 0.5);
+    else if (keys.s) speed = Math.max(0, speed - 1.2);
+    else speed = Math.max(0, speed - 0.1);
 
     if (speed > 0 && !isAtStation) {
       let moved = speed * 0.05;
       totalProgress += moved;
       distanceToNextStop = Math.max(0, distanceToNextStop - moved);
-      
-      if (distanceToNextStop === 0) {
-        isAtStation = true;
-        speed = 0;
-      }
+      if (distanceToNextStop === 0) { isAtStation = true; speed = 0; }
     }
 
     if(frame % 250 === 0) lightState = lightState === 2 ? 0 : 2;
 
-    let netBalance = earnedMoney - fines;
-
     document.getElementById('speed').textContent = Math.round(speed);
     document.getElementById('passengers').textContent = passengers;
-    document.getElementById('netMoney').textContent = netBalance;
+    document.getElementById('netMoney').textContent = earnedMoney - fines;
     document.getElementById('fines').textContent = `${fines} ₴`;
-    document.getElementById('nextStop').textContent = currentStops[stopIndex] || "Конечная";
+    document.getElementById('nextStop').textContent = currentStops[stopIndex].name || "Конечная";
     document.getElementById('stopsProgress').textContent = `${stopIndex + 1} / ${currentStops.length}`;
 
-    let statusText = 'В ПУТИ';
-    if (doorsOpen) statusText = '🚪 ПОСАДКА (Нажмите E)';
-    else if (isAtStation) statusText = '🚏 ОСТАНОВКА (Откройте двери - E)';
-    else if (handbrake) statusText = '🅿️ РУЧНИК';
-    else if (speed === 0) statusText = 'СТОИМ';
-    document.getElementById('statusBadge').textContent = statusText;
+    let status = 'В ПУТИ';
+    if (doorsOpen) status = '🚪 ПОСАДКА';
+    else if (isAtStation) status = '🚏 ОСТАНОВКА (E)';
+    else if (handbrake) status = '🅿️ РУЧНИК';
+    else if (speed === 0) status = 'СТОИМ';
+    document.getElementById('statusBadge').textContent = status;
 
     drawScene();
   }
   requestAnimationFrame(update);
 }
-
 requestAnimationFrame(update);
 </script>
-
 </body>
 </html>
