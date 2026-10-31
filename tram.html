@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>VERTBLOX - Одесский Трамвай №7</title>
+<title>VERTBLOX - Одесский Трамвай (Симулятор)</title>
 <style>
 *{box-sizing:border-box}
 body{
@@ -17,7 +17,21 @@ body{
   background:#17212b; border:1px solid #2b394a; border-radius:12px; padding:12px 20px;
 }
 .top-bar a{color:#64b5f6; text-decoration:none; font-size:13px; font-weight:bold}
-.speed-badge{font-size:36px; font-weight:900; color:#4caf50}
+.money-badge{font-size:28px; font-weight:900; color:#4caf50}
+
+.menu-screen, .game-screen{display:none}
+.menu-screen.active, .game-screen.active{display:block}
+
+.routes-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-top:20px;
+}
+.route-card{
+  background:#17212b; border:2px solid #2b394a; border-radius:12px; padding:20px;
+  cursor:pointer; text-align:center; transition:0.2s;
+}
+.route-card:hover{border-color:#64b5f6; transform:translateY(-3px)}
+.route-card h3{margin:0 0 10px 0; color:#ffca28}
+.route-card p{font-size:12px; color:#8b9dc3; margin:0}
 
 .canvas-container{
   position:relative; margin-top:12px; border-radius:14px; overflow:hidden;
@@ -63,95 +77,134 @@ canvas{display:block; width:100%; height:320px; background:#182533}
   background:#17212b; border:1px solid #2b394a; border-radius:12px; padding:12px; margin-top:12px;
 }
 .log-content{font-size:12px; color:#b0bec5; max-height:80px; overflow-y:auto; line-height:1.6}
-
-@media(max-width:600px){
-  canvas{height:220px}
-  .metrics-grid{grid-template-columns:repeat(2,1fr)}
-}
 </style>
 </head>
 <body>
 
 <div id="game">
-  <div class="top-bar">
-    <div>
-      <a href="games.html">← В КАТАЛОГ VERTBLOX</a>
-      <h3 style="margin:4px 0 0 0; color:#fff">🚋 Одесский Трамвай №7 (Симулятор)</h3>
+  <!-- МЕНЮ ВЫБОРА МАРШРУТА -->
+  <div id="menuScreen" class="menu-screen active">
+    <div class="top-bar">
+      <div>
+        <a href="games.html">← В КАТАЛОГ VERTBLOX</a>
+        <h2 style="margin:5px 0 0 0; color:#fff">🚋 Выбор Одесского маршрута</h2>
+      </div>
     </div>
-    <div style="text-align:right">
-      <div class="speed-badge"><span id="speed">0</span> <small style="font-size:14px; color:#aaa">км/ч</small></div>
-    </div>
-  </div>
-
-  <div class="canvas-container">
-    <canvas id="view" width="920" height="320"></canvas>
-    <div class="hud-overlay">
-      <div class="hud-card">📍 Сл. остановка: <span id="nextStop" style="color:#ffca28">Привоз</span></div>
-      <div class="hud-card" id="statusBadge">ГОТОВ К ОТПРАВЛЕНИЮ</div>
-    </div>
-  </div>
-
-  <div class="metrics-grid">
-    <div class="metric"><small>Остановки</small><strong id="stops">0 / 50</strong></div>
-    <div class="metric"><small>Пассажиры</small><strong id="passengers">15</strong></div>
-    <div class="metric"><small>Штрафы</small><strong id="fines" style="color:#ef5350">0 ₴</strong></div>
-    <div class="metric"><small>Целость</small><strong id="health" style="color:#66bb6a">100%</strong></div>
-  </div>
-
-  <div class="controls-guide">
-    <b>Управление с клавиатуры:</b>
-    <div class="key-grid">
-      <div class="key-item"><span>Газ / Разгон</span> <span class="kbd">W</span> / <span class="kbd">↑</span></div>
-      <div class="key-item"><span>Тормоз</span> <span class="kbd">S</span> / <span class="kbd">↓</span></div>
-      <div class="key-item"><span>Звонок</span> <span class="kbd">SPACE</span></div>
-      <div class="key-item"><span>Двери</span> <span class="kbd">E</span></div>
-      <div class="key-item"><span>Ручник</span> <span class="kbd">P</span></div>
-      <div class="key-item"><span>Вид Камеры</span> <span class="kbd">C</span></div>
+    <div style="margin-top:20px">
+      <p style="color:#8b9dc3">Выберите маршрут электротранспорта Одессы для начала рейса:</p>
+      <div class="routes-grid">
+        <div class="route-card" onclick="startRoute(7)">
+          <h3>Маршрут №7</h3>
+          <p>Пересыпский мост — ул. Паустовского (Поскот)</p>
+        </div>
+        <div class="route-card" onclick="startRoute(18)">
+          <h3>Маршрут №18</h3>
+          <p>16-я ст. Большого Фонтана — Куликово поле</p>
+        </div>
+        <div class="route-card" onclick="startRoute(27)">
+          <h3>Маршрут №27</h3>
+          <p>Рыбпорт — Пересыпский мост (Черноморка)</p>
+        </div>
+        <div class="route-card" onclick="startRoute(20)">
+          <h3>Маршрут №20</h3>
+          <p>Хаджибейский лиман — Зерновой переулок</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="log-panel">
-    <b>Бортовой журнал:</b>
-    <div class="log-content" id="log">Маршрут №7 загружен. Нажмите W для начала движения.</div>
+  <!-- ИГРОВОЙ ЭКРАН -->
+  <div id="gameScreen" class="game-screen">
+    <div class="top-bar">
+      <div>
+        <button onclick="returnToMenu()" style="background:#2b394a; border:0; color:#fff; padding:6px 12px; border-radius:6px; cursor:pointer">Выход в меню</button>
+        <span id="routeTitle" style="margin-left:10px; font-weight:bold; color:#ffca28">Маршрут №7</span>
+      </div>
+      <div style="text-align:right">
+        <div class="money-badge"><span id="money">0</span> <small style="font-size:14px">₴</small></div>
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="view" width="920" height="320"></canvas>
+      <div class="hud-overlay">
+        <div class="hud-card">📍 Остановка: <span id="nextStop" style="color:#ffca28">-</span></div>
+        <div class="hud-card" id="statusBadge">ГОТОВ К ОТПРАВЛЕНИЮ</div>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric"><small>Скорость</small><strong id="speed">0</strong> <span style="font-size:12px">км/ч</span></div>
+      <div class="metric"><small>Пассажиры</small><strong id="passengers">0</strong></div>
+      <div class="metric"><small>Прогресс рейса</small><strong id="progressText">0%</strong></div>
+      <div class="metric"><small>Штрафы</small><strong id="fines" style="color:#ef5350">0 ₴</strong></div>
+    </div>
+
+    <div class="controls-guide">
+      <b>Управление:</b>
+      <div class="key-grid">
+        <div class="key-item"><span>Газ / Разгон</span> <span class="kbd">W</span> / <span class="kbd">↑</span></div>
+        <div class="key-item"><span>Тормоз</span> <span class="kbd">S</span> / <span class="kbd">↓</span></div>
+        <div class="key-item"><span>Двери (Посадка)</span> <span class="kbd">E</span></div>
+        <div class="key-item"><span>Звонок</span> <span class="kbd">SPACE</span></div>
+        <div class="key-item"><span>Ручник</span> <span class="kbd">P</span></div>
+        <div class="key-item"><span>Смена камеры</span> <span class="kbd">C</span></div>
+      </div>
+    </div>
+
+    <div class="log-panel">
+      <b>Бортовой журнал:</b>
+      <div class="log-content" id="log">Трамвай на конечной. Готовьтесь к посадке пассажиров.</div>
+    </div>
   </div>
 </div>
 
 <script>
-const route = [
-  'Привоз','Старосенная пл.','Куликово поле','пл. Веры Холодной','Театральная',
-  'Дерибасовская','Греческая пл.','Соборная пл.','Тираспольская','Еврейская',
-  'Преображенская','Алексеевская пл.','Балковская','Пересыпский мост','Лузановка'
-];
+// База данных реальных маршрутов Одессы
+const ROUTES = {
+  7: {
+    name: "Маршрут №7 (Пересыпь — Поскот)",
+    stops: ["Пересыпский мост", "Зоопарковая", "Лузановка", "Пляж «Лузановка»", "Капитанская", "Марсельская", "Заболотного", "Днепродорога", "Ул. Паустовского"]
+  },
+  18: {
+    name: "Маршрут №18 (Фонтан — Куликово поле)",
+    stops: ["Куликово поле", "Пантелеймоновская", "Ул. Пироговская", "Армейская", "Ул. Сегедская", "Шевченко", "8-я ст. Большого Фонтана", "11-я ст. Большого Фонтана", "16-я ст. Большого Фонтана"]
+  },
+  27: {
+    name: "Маршрут №27 (Черноморка — Пересыпь)",
+    stops: ["Пересыпский мост", "Цукрзавод", "Зоопарковая", "Морпорт", "Дальницкая", "Столбовая", "Рыбпорт", "Станция «Черноморка»"]
+  },
+  20: {
+    name: "Маршрут №20 (Хаджибей — Зерновой)",
+    stops: ["Зерновой переулок", "Сахарный завод", "Кривая Балка", "Промзона", "Хаджибейский лиман"]
+  }
+};
 
-const canvas = document.getElementById('view');
-const ctx = canvas.getContext('2d');
+let currentRouteId = 7;
+let currentStops = [];
+let stopIndex = 0;
 
-let speed = 0, targetSpeed = 0;
-let progress = 0, segment = 0;
-let passengers = 15, fines = 0, health = 100;
+let speed = 0, distanceToNext = 300, totalProgress = 0;
+let passengers = 0, money = 0, fines = 0;
 let doorsOpen = false, handbrake = false;
 let cameraMode = 0; // 0: Боковой 2.5D, 1: Вид из кабины
 let lightState = 2; // 0: Red, 1: Yellow, 2: Green
-let frame = 0, sparkTimer = 0;
+let frame = 0, isAtStation = false;
 
 const keys = { w:false, s:false };
-
-// Звуковой синтезатор Web Audio API
 let audioCtx = null;
+
 function playTone(freq, duration, type='sine') {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     if(audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
   } catch(e){}
 }
 
@@ -160,14 +213,38 @@ function addLog(msg) {
   logEl.innerHTML = `• ${msg}<br>` + logEl.innerHTML;
 }
 
-// Слушатели клавиатуры
+function startRoute(id) {
+  currentRouteId = id;
+  currentStops = ROUTES[id].stops;
+  stopIndex = 0;
+  distanceToNext = 300;
+  totalProgress = 0;
+  passengers = 0;
+  money = 0;
+  fines = 0;
+  speed = 0;
+  doorsOpen = false;
+  isAtStation = false;
+
+  document.getElementById('routeTitle').textContent = ROUTES[id].name;
+  document.getElementById('menuScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.add('active');
+  addLog(`Вышел на линию: ${ROUTES[id].name}. Следующая остановка: ${currentStops[0]}`);
+}
+
+function returnToMenu() {
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('menuScreen').classList.add('active');
+}
+
+// Управление клавиатурой
 window.addEventListener('keydown', e => {
   if(['ArrowUp','ArrowDown','Space','KeyW','KeyS','KeyE','KeyP','KeyC'].includes(e.code)) {
     if(e.code !== 'F5' && e.code !== 'F12') e.preventDefault();
   }
   if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.w = true;
   if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.s = true;
-  if (e.code === 'Space') { playTone(880, 0.4, 'triangle'); addLog('🔔 Подан звонок'); }
+  if (e.code === 'Space') { playTone(880, 0.3, 'triangle'); addLog('🔔 Звонок трамвая'); }
   if (e.code === 'KeyE') toggleDoors();
   if (e.code === 'KeyP') toggleHandbrake();
   if (e.code === 'KeyC') { cameraMode = (cameraMode + 1) % 2; addLog('📷 Камера переключена'); }
@@ -179,134 +256,89 @@ window.addEventListener('keyup', e => {
 });
 
 function toggleDoors() {
-  if (speed > 1) { addLog('⚠️ Нельзя открывать двери на ходу!'); return; }
+  if (speed > 1) { addLog('⚠️ Опасно! Нельзя открывать двери на ходу.'); return; }
+  if (!isAtStation) { addLog('⚠️ Здесь нет остановочного пункта!'); return; }
+
   doorsOpen = !doorsOpen;
-  playTone(300, 0.2);
-  addLog(doorsOpen ? '🚪 Двери открыты' : '🚪 Двери закрыты');
+  playTone(250, 0.2);
+
+  if (doorsOpen) {
+    let leaving = Math.floor(Math.random() * passengers);
+    let entering = Math.floor(Math.random() * 12) + 5;
+    passengers = Math.max(0, passengers - leaving) + entering;
+    let earned = entering * 8; // 8 гривен за билет
+    money += earned;
+    addLog(`🚪 Посадка/высадка на ст. "${currentStops[stopIndex]}". Выручка: +${earned} ₴`);
+  } else {
+    addLog('🚪 Двери закрыты. Отправляемся дальше.');
+    isAtStation = false;
+    stopIndex++;
+    if (stopIndex >= currentStops.length) {
+      addLog(`🏆 Маршрут успешно завершен! Общая выручка: ${money} ₴`);
+      stopIndex = currentStops.length - 1;
+    }
+    distanceToNext = 300; // дистанция до следующей остановки
+  }
 }
 
 function toggleHandbrake() {
-  if (speed > 2) { addLog('⚠️ Заблокировано: остановка на скорости опасна!'); return; }
+  if (speed > 2) { addLog('⚠️ Сначала полностью остановите трамвай!'); return; }
   handbrake = !handbrake;
-  playTone(200, 0.15);
   addLog(handbrake ? '🅿️ Ручник затянут' : '🅿️ Ручник снят');
 }
 
-// Отрисовка сканлайн-сцены на Canvas
+// Отрисовка Canvas
+const canvas = document.getElementById('view');
+const ctx = canvas.getContext('2d');
+
 function drawScene() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (cameraMode === 0) {
-    // --- ВИД СБОКУ (2.5D Параллакс) ---
-    // Небо
+    // Небо и фон
     let skyGrad = ctx.createLinearGradient(0,0,0,180);
-    skyGrad.addColorStop(0, '#0f2027');
-    skyGrad.addColorStop(1, '#203a43');
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, canvas.width, 180);
+    skyGrad.addColorStop(0, '#0f2027'); skyGrad.addColorStop(1, '#203a43');
+    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, 180);
 
-    // Дальний план (Здания/Деревья)
+    // Дома (параллакс)
     ctx.fillStyle = '#142834';
     for (let i = -100; i < canvas.width + 100; i += 120) {
-      let x = (i - (progress * 0.4) % 120);
-      ctx.fillRect(x, 90, 80, 90);
-      ctx.fillRect(x + 20, 70, 40, 20); // Кровельные детали
+      let x = (i - (totalProgress * 0.3) % 120);
+      ctx.fillRect(x, 80, 80, 100);
     }
 
-    // Земля и дорога
-    ctx.fillStyle = '#2c3e50';
-    ctx.fillRect(0, 180, canvas.width, 140);
+    // Земля и рельсы
+    ctx.fillStyle = '#2c3e50'; ctx.fillRect(0, 180, canvas.width, 140);
+    ctx.fillStyle = '#78909c'; ctx.fillRect(0, 215, canvas.width, 4); ctx.fillRect(0, 222, canvas.width, 4);
 
-    // Столбы ЛЭП
-    ctx.strokeStyle = '#455a64';
-    ctx.lineWidth = 3;
-    for (let i = -50; i < canvas.width + 50; i += 200) {
-      let x = (i - (progress * 1.5) % 200);
-      ctx.beginPath(); ctx.moveTo(x, 50); ctx.lineTo(x, 190); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x - 15, 60); ctx.lineTo(x + 15, 60); ctx.stroke();
-    }
-    // Контактный провод
-    ctx.strokeStyle = '#90a4ae'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, 60); ctx.lineTo(canvas.width, 60); ctx.stroke();
-
-    // Рельсы
-    ctx.fillStyle = '#78909c';
-    ctx.fillRect(0, 215, canvas.width, 4);
-    ctx.fillRect(0, 222, canvas.width, 4);
-
-    // Шпалы
-    ctx.fillStyle = '#37474f';
-    for (let i = -20; i < canvas.width + 20; i += 30) {
-      let x = (i - (progress * 2) % 30);
-      ctx.fillRect(x, 215, 12, 11);
-    }
-
-    // ТРАМВАЙ (Татра T3 стиль)
+    // Трамвай (Татра T3)
     let tramX = canvas.width / 2 - 100;
-    let tramY = 150;
-
-    // Корпус
-    ctx.fillStyle = '#d32f2f'; // Красный низ
-    ctx.fillRect(tramX, tramY + 25, 200, 40);
-    ctx.fillStyle = '#fff8e1'; // Кремовый верх
-    ctx.fillRect(tramX, tramY, 200, 25);
-
-    // Окна
+    let tramY = 145;
+    ctx.fillStyle = '#d32f2f'; ctx.fillRect(tramX, tramY + 25, 200, 40);
+    ctx.fillStyle = '#fff8e1'; ctx.fillRect(tramX, tramY, 200, 25);
     ctx.fillStyle = '#81d4fa';
-    for(let w=15; w<180; w+=35){
-      ctx.fillRect(tramX + w, tramY + 5, 25, 15);
-    }
+    for(let w=15; w<180; w+=35) ctx.fillRect(tramX + w, tramY + 5, 25, 15);
 
-    // Колеса (Боги)
+    // Колеса
     ctx.fillStyle = '#263238';
     ctx.beginPath(); ctx.arc(tramX + 40, tramY + 68, 10, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(tramX + 160, tramY + 68, 10, 0, Math.PI*2); ctx.fill();
 
-    // Пантограф (Токоприемник)
-    ctx.strokeStyle = '#cfd8dc'; ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(tramX + 100, tramY);
-    ctx.lineTo(tramX + 110, tramY - 45);
-    ctx.lineTo(tramX + 90, tramY - 90);
-    ctx.stroke();
-
-    // Искры от тока
-    if (speed > 10 && Math.random() < 0.3) {
-      ctx.fillStyle = '#00e5ff';
-      ctx.beginPath();
-      ctx.arc(tramX + 90 + (Math.random()*6-3), tramY - 90, 4, 0, Math.PI*2);
-      ctx.fill();
+    // Платформа остановки, когда близко
+    if (distanceToNext < 50) {
+      ctx.fillStyle = '#ffca28';
+      ctx.fillRect(canvas.width - 150, 230, 120, 15);
+      ctx.fillStyle = '#000'; ctx.font = 'bold 11px sans-serif';
+      ctx.fillText(`🚏 ${currentStops[stopIndex]}`, canvas.width - 140, 242);
     }
-
-    // Светофор
-    let lightX = (700 - (progress * 2) % 1000);
-    if(lightX > -50 && lightX < canvas.width) {
-      ctx.fillStyle = '#212121'; ctx.fillRect(lightX, 100, 16, 45);
-      ctx.fillStyle = lightState === 0 ? '#ff1744' : '#550000';
-      ctx.beginPath(); ctx.arc(lightX+8, 108, 5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = lightState === 1 ? '#ffea00' : '#555500';
-      ctx.beginPath(); ctx.arc(lightX+8, 122, 5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = lightState === 2 ? '#00e676' : '#005500';
-      ctx.beginPath(); ctx.arc(lightX+8, 136, 5, 0, Math.PI*2); ctx.fill();
-    }
-
   } else {
-    // --- ВИД ИЗ КАБИНЫ (FPV) ---
-    // Лобовое стекло и капот
+    // Вид из кабины
     ctx.fillStyle = '#102027'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Перспектива рельсов
     ctx.strokeStyle = '#b0bec5'; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(canvas.width/2 - 20, 140); ctx.lineTo(100, 320); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(canvas.width/2 + 20, 140); ctx.lineTo(820, 320); ctx.stroke();
-
-    // Панель кабины
     ctx.fillStyle = '#263238'; ctx.fillRect(0, 240, canvas.width, 80);
-    ctx.fillStyle = '#37474f'; ctx.fillRect(canvas.width/2 - 150, 250, 300, 70);
-    
-    // Спидометр кабины
-    ctx.fillStyle = '#00e676';
-    ctx.font = 'bold 20px monospace';
+    ctx.fillStyle = '#00e676'; ctx.font = 'bold 20px monospace';
     ctx.fillText(`СКОРОСТЬ: ${Math.round(speed)} КМ/Ч`, canvas.width/2 - 110, 290);
   }
 }
@@ -315,37 +347,45 @@ function drawScene() {
 function update() {
   frame++;
 
-  // Логика управления
-  if (keys.w && !doorsOpen && !handbrake) {
-    speed = Math.min(80, speed + 0.6);
-  } else if (keys.s) {
-    speed = Math.max(0, speed - 1.2);
-  } else {
-    speed = Math.max(0, speed - 0.15); // Естественное трение
+  if (document.getElementById('gameScreen').classList.contains('active')) {
+    // Движение
+    if (keys.w && !doorsOpen && !handbrake) {
+      speed = Math.min(75, speed + 0.5);
+    } else if (keys.s) {
+      speed = Math.max(0, speed - 1.2);
+    } else {
+      speed = Math.max(0, speed - 0.1);
+    }
+
+    if (speed > 0) {
+      let moved = speed * 0.05;
+      totalProgress += moved;
+      distanceToNext = Math.max(0, distanceToNext - moved * 10);
+      
+      if (distanceToNext === 0 && speed < 3) {
+        isAtStation = true;
+      }
+    }
+
+    // Обновление UI
+    document.getElementById('speed').textContent = Math.round(speed);
+    document.getElementById('passengers').textContent = passengers;
+    document.getElementById('money').textContent = money;
+    document.getElementById('fines').textContent = `${fines} ₴`;
+    document.getElementById('nextStop').textContent = currentStops[stopIndex] || "Конечная";
+    
+    let progPercent = Math.min(100, Math.round((stopIndex / currentStops.length) * 100));
+    document.getElementById('progressText').textContent = progPercent + '%';
+
+    let statusText = 'В ПУТИ';
+    if (doorsOpen) statusText = '🚪 ПОСАДКА (Нажмите E)';
+    else if (isAtStation) statusText = '🚏 ОСТАНОВКА (Откройте двери - E)';
+    else if (handbrake) statusText = '🅿️ РУЧНИК';
+    else if (speed === 0) statusText = 'СТОИМ';
+    document.getElementById('statusBadge').textContent = statusText;
+
+    drawScene();
   }
-
-  progress += speed * 0.1;
-
-  // Динамика светофоров
-  if (frame % 150 === 0) {
-    lightState = (lightState + 1) % 3;
-  }
-
-  // Обновление UI
-  document.getElementById('speed').textContent = Math.round(speed);
-  document.getElementById('stops').textContent = `${segment} / 50`;
-  document.getElementById('passengers').textContent = passengers;
-  document.getElementById('fines').textContent = `${fines} ₴`;
-  document.getElementById('health').textContent = `${health}%`;
-  document.getElementById('nextStop').textContent = route[segment % route.length];
-
-  let statusText = 'В ДВИЖЕНИИ';
-  if (doorsOpen) statusText = '🚪 ДВЕРИ ОТКРЫТЫ';
-  else if (handbrake) statusText = '🅿️ РУЧНИК';
-  else if (speed === 0) statusText = 'ОСТАНОВЛЕН';
-  document.getElementById('statusBadge').textContent = statusText;
-
-  drawScene();
   requestAnimationFrame(update);
 }
 
